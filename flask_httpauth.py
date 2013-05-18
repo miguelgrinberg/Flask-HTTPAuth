@@ -9,7 +9,7 @@ This module provides Basic and Digest HTTP authentication for Flask routes.
 """
 
 from functools import wraps
-from hashlib import sha1, md5
+from hashlib import md5
 from random import random
 from flask import request, make_response
 
@@ -22,12 +22,12 @@ class HTTPAuth:
 
         self.realm = "Authentication Required"
         self.get_password(default_get_password)
-        self.errorhandler(default_auth_error)
+        self.error_handler(default_auth_error)
 
     def get_password(self, f):
         self.get_password_callback = f
 
-    def errorhandler(self, f):
+    def error_handler(self, f):
         @wraps(f)
         def decorated(*args, **kwargs):
             res = make_response(f(*args, **kwargs))
@@ -60,7 +60,7 @@ class HTTPBasicAuth(HTTPAuth):
 
 class HTTPDigestAuth(HTTPAuth):
     def get_nonce(self):
-        return sha1(str(random())).hexdigest()
+        return md5(str(random())).hexdigest()
         
     def authenticate_header(self):
         return 'Digest realm="' + self.realm + '",nonce="' + self.get_nonce() + '",opaque="' + self.get_nonce() + '"'
