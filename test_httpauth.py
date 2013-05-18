@@ -61,22 +61,22 @@ class HTTPAuthTestCase(unittest.TestCase):
             
         @app.route('/basic')
         @basic_auth.login_required
-        def basic_auth():
+        def basic_auth_route():
             return "basic_auth"
             
         @app.route('/basic-with-realm')
         @basic_auth_my_realm.login_required
-        def basic_auth_my_realm():
+        def basic_auth_my_realm_route():
             return "basic_auth_my_realm"
 
         @app.route('/digest')
         @digest_auth.login_required
-        def digest_auth():
+        def digest_auth_route():
             return "digest_auth"
         
         @app.route('/digest-with-realm')
         @digest_auth_my_realm.login_required
-        def digest_auth_my_realm():
+        def digest_auth_my_realm_route():
             return "digest_auth_my_realm"
 
         self.app = app
@@ -105,6 +105,8 @@ class HTTPAuthTestCase(unittest.TestCase):
         response = self.client.get('/basic', 
             headers = { "Authorization": "Basic " + base64.encodestring("john:hello").strip("\r\n") })
         self.assertTrue(response.data == "basic_auth")
+        print self.basic_auth
+        self.assertTrue(self.basic_auth.username == "john")
         
     def test_basic_auth_login_invalid(self):
         response = self.client.get('/basic-with-realm',
@@ -129,6 +131,7 @@ class HTTPAuthTestCase(unittest.TestCase):
         response = self.client.get('/digest', 
             headers = { "Authorization": 'Digest username="john",realm="Authentication Required",nonce="dcd98b7102dd2f0e8b11d0f600bfb0c093",uri="/digest",response="ca306c361a9055b968810067a37fb8cb",opaque="5ccc069c403ebaf9f0171e9517f40e41"' })
         self.assertTrue(response.data == "digest_auth")
+        self.assertTrue(self.digest_auth.username == "john")
 
     def test_digest_auth_login_invalid(self):
         response = self.client.get('/digest-with-realm', 
