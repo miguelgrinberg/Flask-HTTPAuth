@@ -13,7 +13,7 @@ from hashlib import md5
 from random import random
 from flask import request, make_response
 
-class HTTPAuth:
+class HTTPAuth(object):
     def __init__(self):
         def default_get_password(username):
             return None
@@ -55,11 +55,21 @@ class HTTPAuth:
         return decorated
 
 class HTTPBasicAuth(HTTPAuth):
+    def __init__(self):
+        super(HTTPBasicAuth, self).__init__()
+        self.hash_password(None)
+
+    def hash_password(self, f):
+        self.hash_password_callback = f
+
     def authenticate_header(self):
         return 'Basic realm="' + self.realm + '"'
 
     def authenticate(self, auth, password):
-        return auth.password == password
+        client_password = auth.password
+        if self.hash_password_callback:
+            client_password = self.hash_password_callback(client_password)
+        return client_password == password
 
 class HTTPDigestAuth(HTTPAuth):
     def get_nonce(self):
