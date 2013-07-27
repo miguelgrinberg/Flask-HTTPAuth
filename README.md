@@ -1,4 +1,4 @@
-flask-httpauth
+Flask-HTTPAuth
 ==============
 
 Simple extension that provides Basic and Digest HTTP authentication for Flask routes.
@@ -38,6 +38,7 @@ Digest authentication example
     from flask.ext.httpauth import HTTPDigestAuth
     
     app = Flask(__name__)
+    app.config['SECRET_KEY'] = 'secret key here'
     auth = HTTPDigestAuth()
     
     users = {
@@ -59,80 +60,11 @@ Digest authentication example
     if __name__ == '__main__':
         app.run()
 
-API Documentation
------------------
+Resources
+---------
 
-class **flask.ext.httpauth.HTTPBasicAuth**
-
-  This class that handles HTTP Basic authentication for Flask routes.
-        
-  Public methods:
-        
-  - **get_password(password_callback)**
-
-    Required. This callback function will be called by the framework to obtain the password for a given user. Example:
-    
-    <pre>
-    @auth.get_password
-    def get_password(username):
-        return db.get_user_password(username)
-    </pre>
-
-  - **hash_password(hash_password_callback)**
-
-    Optional. If defined, this callback function will be called by the framework to apply a custom hashing algorithm to the password provided by the client. If this callback isn't provided the password will be checked unchanged. Example:
-
-    <pre>
-    @auth.hash_password
-    def hash_password(password):
-        return md5(password).hexdigest()
-    </pre>
-
-  - **error_handler(error_callback)**
-
-    Optional. If defined, this callback function will be called by the framework when it is necessary to send an authentication error back to the client. The return value from this function can be the body of the response as a string or it can also be a response object created with `make_response`. If this callback isn't provided a default error response is generated. Example:
-    
-    <pre>
-    @auth.error_handler
-    def auth_error():
-        return "&lt;h1&gt;Access Denied&lt;/h1&gt;"
-    </pre>
-
-  - **login_required(view_function_callback)**
-        
-    Required. This callback function will be called when authentication is succesful. This will typically be a Flask view function. Example:
-
-    <pre>
-    @app.route('/private')
-    @auth.login_required
-    def private_page():
-        return "Only for authorized people!"
-    </pre>
-
-class **flask.ext.httpauth.HTTPDigestAuth**
-
-  This class that handles HTTP Digest authentication for Flask routes.
-        
-  Public methods:
-        
-  - **get_password(password_callback)**
-
-    Required. See basic authentication for documentation and examples.
-    
-  - **error_handler(error_callback)**
-
-    Optional. See basic authentication for documentation and examples.
-    
-  - **login_required(view_function_callback)**
-        
-    Required.  See basic authentication for documentation and examples.
-
-
-Limitations
------------
-
-In Digest authentication there is currently no provision to validate that the nonce sent by the client is the same one sent by the server.
-
+- [Documentation](http://pythonhosted.org/Flask-HTTPAuth)
+- [pypi](https://pypi.python.org/pypi/Flask-HTTPAuth) 
 
 License
 -------

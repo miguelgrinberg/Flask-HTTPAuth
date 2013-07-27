@@ -2,19 +2,19 @@
 Flask-HTTPAuth
 --------------
 
-This is the description for that library
+Basic and Digest HTTP authentication for Flask routes.
 """
 from setuptools import setup
 
 
 setup(
     name='Flask-HTTPAuth',
-    version='0.6',
+    version='1.0.0',
     url='http://github.com/miguelgrinberg/flask-httpauth/',
     license='BSD',
     author='Miguel Grinberg',
     author_email='miguelgrinberg50@gmail.com',
-    description='Support for Basic and Digest HTTP authentication for Flask routes',
+    description='Basic and Digest HTTP authentication for Flask routes',
     long_description=__doc__,
     py_modules=['flask_httpauth'],
     zip_safe=False,
@@ -23,6 +23,7 @@ setup(
     install_requires=[
         'Flask'
     ],
+    test_suite = "test_httpauth",
     classifiers=[
         'Environment :: Web Environment',
         'Intended Audience :: Developers',

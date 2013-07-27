@@ -11,7 +11,7 @@ This module provides Basic and Digest HTTP authentication for Flask routes.
 from functools import wraps
 from hashlib import md5
 from random import random
-from flask import request, make_response
+from flask import request, make_response, session
 
 class HTTPAuth(object):
     def __init__(self):
@@ -79,10 +79,14 @@ class HTTPDigestAuth(HTTPAuth):
         return md5(str(random())).hexdigest()
         
     def authenticate_header(self):
-        return 'Digest realm="' + self.realm + '",nonce="' + self.get_nonce() + '",opaque="' + self.get_nonce() + '"'
+        session["auth_nonce"] = self.get_nonce()
+        session["auth_opaque"] = self.get_nonce()
+        return 'Digest realm="' + self.realm + '",nonce="' + session["auth_nonce"] + '",opaque="' + session["auth_opaque"] + '"'
 
     def authenticate(self, auth, password):
         if not auth.username or not auth.realm or not auth.uri or not auth.nonce or not auth.response:
+            return False
+        if auth.nonce != session.get("auth_nonce") or auth.opaque != session.get("auth_opaque"):
             return False
         a1 = auth.username + ":" + auth.realm + ":" + password
         ha1 = md5(a1).hexdigest()
