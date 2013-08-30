@@ -134,7 +134,7 @@ API Documentation
 
 .. class:: flask.ext.httpauth.HTTPDigestAuth
 
-  This class that handles HTTP Digest authentication for Flask routes. The ``SECRET_KEY`` configuration must be set in the Flask application to enable the session to work.
+  This class that handles HTTP Digest authentication for Flask routes. The ``SECRET_KEY`` configuration must be set in the Flask application to enable the session to work. Flask by default stores user sessions in the client as secure cookies, so the client must be able to handle cookies. To support clients that are not web browsers or that cannot handle cookies a http://flask.pocoo.org/docs/api/#flask.Flask.session_interface[session interface] that writes sessions in the server must be used.
         
   .. method:: get_password(password_callback)
 
