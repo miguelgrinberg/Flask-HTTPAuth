@@ -10,7 +10,7 @@ This module provides Basic and Digest HTTP authentication for Flask routes.
 
 from functools import wraps
 from hashlib import md5
-from random import random
+from random import Random, SystemRandom
 from flask import request, make_response, session
 
 class HTTPAuth(object):
@@ -75,8 +75,16 @@ class HTTPBasicAuth(HTTPAuth):
         return client_password == password
 
 class HTTPDigestAuth(HTTPAuth):
+    def __init__(self):
+        super(HTTPDigestAuth, self).__init__()
+        self.random = SystemRandom()
+        try:
+            self.random.random()
+        except NotImplementedError:
+            self.random = Random()
+
     def get_nonce(self):
-        return md5(str(random())).hexdigest()
+        return md5(str(self.random.random()).encode('utf-8')).hexdigest()
         
     def authenticate_header(self):
         session["auth_nonce"] = self.get_nonce()
@@ -89,9 +97,9 @@ class HTTPDigestAuth(HTTPAuth):
         if auth.nonce != session.get("auth_nonce") or auth.opaque != session.get("auth_opaque"):
             return False
         a1 = auth.username + ":" + auth.realm + ":" + password
-        ha1 = md5(a1).hexdigest()
+        ha1 = md5(a1.encode('utf-8')).hexdigest()
         a2 = request.method + ":" + auth.uri
-        ha2 = md5(a2).hexdigest()
+        ha2 = md5(a2.encode('utf-8')).hexdigest()
         a3 = ha1 + ":" + auth.nonce + ":" + ha2
-        response = md5(a3).hexdigest()
+        response = md5(a3.encode('utf-8')).hexdigest()
         return response == auth.response
