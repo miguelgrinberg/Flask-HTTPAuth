@@ -84,27 +84,27 @@ class HTTPAuthTestCase(unittest.TestCase):
         @app.route('/basic')
         @basic_auth.login_required
         def basic_auth_route():
-            return "basic_auth"
+            return "basic_auth:" + basic_auth.username()
             
         @app.route('/basic-with-realm')
         @basic_auth_my_realm.login_required
         def basic_auth_my_realm_route():
-            return "basic_auth_my_realm"
+            return "basic_auth_my_realm:" + basic_auth_my_real.username()
 
         @app.route('/basic-custom')
         @basic_custom_auth.login_required
         def basic_custom_auth_route():
-            return "basic_custom_auth"
+            return "basic_custom_auth:" + basic_custom_auth.username()
 
         @app.route('/digest')
         @digest_auth.login_required
         def digest_auth_route():
-            return "digest_auth"
+            return "digest_auth:" + digest_auth.username()
         
         @app.route('/digest-with-realm')
         @digest_auth_my_realm.login_required
         def digest_auth_my_realm_route():
-            return "digest_auth_my_realm"
+            return "digest_auth_my_realm:" + digest_auth_my_real.username()
 
         self.app = app
         self.basic_auth = basic_auth
@@ -133,8 +133,7 @@ class HTTPAuthTestCase(unittest.TestCase):
     def test_basic_auth_login_valid(self):
         response = self.client.get('/basic', 
             headers = { "Authorization": "Basic " + base64.b64encode(b'john:hello').decode('utf-8').strip("\r\n") })
-        self.assertTrue(response.data.decode('utf-8') == "basic_auth")
-        self.assertTrue(self.basic_auth.username == "john")
+        self.assertTrue(response.data.decode('utf-8') == "basic_auth:john")
         
     def test_basic_auth_login_invalid(self):
         response = self.client.get('/basic-with-realm',
@@ -146,8 +145,7 @@ class HTTPAuthTestCase(unittest.TestCase):
     def test_basic_custom_auth_login_valid(self):
         response = self.client.get('/basic-custom',
             headers = { "Authorization": "Basic " + base64.b64encode(b'john:hello').decode('utf-8').strip("\r\n") })
-        self.assertTrue(response.data.decode('utf-8') == "basic_custom_auth")
-        self.assertTrue(self.basic_custom_auth.username == "john")
+        self.assertTrue(response.data.decode('utf-8') == "basic_custom_auth:john")
 
     def test_basic_custom_auth_login_invalid(self):
         response = self.client.get('/basic-custom',
@@ -183,8 +181,7 @@ class HTTPAuthTestCase(unittest.TestCase):
 
         response = self.client.get('/digest', 
             headers = { "Authorization": 'Digest username="john",realm="' + d['realm'] + '",nonce="' + d['nonce'] + '",uri="/digest",response="' + auth_response + '",opaque="' + d['opaque'] + '"' })
-        self.assertTrue(response.data.decode('utf-8') == "digest_auth")
-        self.assertTrue(self.digest_auth.username == "john")
+        self.assertTrue(response.data.decode('utf-8') == "digest_auth:john")
 
     def test_digest_auth_login_bad_realm(self):
         response = self.client.get('/digest')

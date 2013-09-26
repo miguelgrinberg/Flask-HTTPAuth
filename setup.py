@@ -9,9 +9,9 @@ from setuptools import setup
 
 setup(
     name='Flask-HTTPAuth',
-    version='1.1.0',
+    version='2.0.0',
     url='http://github.com/miguelgrinberg/flask-httpauth/',
-    license='BSD',
+    license='MIT',
     author='Miguel Grinberg',
     author_email='miguelgrinberg50@gmail.com',
     description='Basic and Digest HTTP authentication for Flask routes',

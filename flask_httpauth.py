@@ -23,7 +23,6 @@ class HTTPAuth(object):
         self.realm = "Authentication Required"
         self.get_password(default_get_password)
         self.error_handler(default_auth_error)
-        self.username = None
 
     def get_password(self, f):
         self.get_password_callback = f
@@ -44,7 +43,6 @@ class HTTPAuth(object):
     def login_required(self, f):
         @wraps(f)
         def decorated(*args, **kwargs):
-            self.username = None
             auth = request.authorization
             if not auth:
                 return self.auth_error_callback()
@@ -53,9 +51,11 @@ class HTTPAuth(object):
                 return self.auth_error_callback()
             if not self.authenticate(auth, password):
                 return self.auth_error_callback()
-            self.username = auth.username
             return f(*args, **kwargs)
         return decorated
+
+    def username(self):
+        return request.authorization.username
 
 class HTTPBasicAuth(HTTPAuth):
     def __init__(self):
