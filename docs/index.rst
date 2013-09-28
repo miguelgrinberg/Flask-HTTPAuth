@@ -48,6 +48,13 @@ If the passwords are stored hashed in the user database then an additional callb
 
 When the ``hash_password`` callback is provided access will be granted when ``get_password(username) == hash_password(password)``.
 
+If the hashing algorithm requires the username to be known then the callback can take two arguments instead of one::
+
+    @auth.hash_password
+    def hash_pw(username, password):
+        get_salt(username)
+        return hash(password, salt)
+
 Digest authentication example
 -----------------------------
 
@@ -100,11 +107,18 @@ API Documentation
 
   .. method:: hash_password(hash_password_callback)
 
-    *Optional*. If defined, this callback function will be called by the framework to apply a custom hashing algorithm to the password provided by the client. If this callback isn't provided the password will be checked unchanged. Example::
+    *Optional*. If defined, this callback function will be called by the framework to apply a custom hashing algorithm to the password provided by the client. If this callback isn't provided the password will be checked unchanged. The callback can take one or two arguments. The one argument version receives the password to hash, while the two argument version receives the username and the password in that order. Example single argument callback::
 
       @auth.hash_password
       def hash_password(password):
           return md5(password).hexdigest()
+
+Example two argument callback::
+
+    @auth.hash_password
+    def hash_pw(username, password):
+        get_salt(username)
+        return hash(password, salt)
 
   .. method:: error_handler(error_callback)
 
