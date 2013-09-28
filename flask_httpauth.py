@@ -71,7 +71,10 @@ class HTTPBasicAuth(HTTPAuth):
     def authenticate(self, auth, password):
         client_password = auth.password
         if self.hash_password_callback:
-            client_password = self.hash_password_callback(client_password)
+            try:
+                client_password = self.hash_password_callback(client_password)
+            except TypeError:
+                client_password = self.hash_password_callback(auth.username, client_password)
         return client_password == password
 
 class HTTPDigestAuth(HTTPAuth):

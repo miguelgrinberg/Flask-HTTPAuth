@@ -36,11 +36,15 @@ class HTTPAuthTestCase(unittest.TestCase):
         @basic_auth_my_realm.get_password
         def get_basic_password(username):
             if username == "john":
-                return "hello"
+                return "johnhello"
             elif username == "susan":
-                return "bye"
+                return "susanbye"
             else:
                 return "other"
+
+        @basic_auth_my_realm.hash_password
+        def basic_auth_my_realm_hash_password(username, password):
+            return username + password
 
         @basic_auth_my_realm.error_handler
         def basic_auth_my_realm_error():
@@ -56,7 +60,7 @@ class HTTPAuthTestCase(unittest.TestCase):
                 return "other"
 
         @basic_custom_auth.hash_password
-        def custom_authenticate(password):
+        def basic_custom_auth_hash_password(password):
             return md5(password).hexdigest()
 
         @digest_auth.get_password
@@ -89,7 +93,7 @@ class HTTPAuthTestCase(unittest.TestCase):
         @app.route('/basic-with-realm')
         @basic_auth_my_realm.login_required
         def basic_auth_my_realm_route():
-            return "basic_auth_my_realm:" + basic_auth_my_real.username()
+            return "basic_auth_my_realm:" + basic_auth_my_realm.username()
 
         @app.route('/basic-custom')
         @basic_custom_auth.login_required
@@ -104,7 +108,7 @@ class HTTPAuthTestCase(unittest.TestCase):
         @app.route('/digest-with-realm')
         @digest_auth_my_realm.login_required
         def digest_auth_my_realm_route():
-            return "digest_auth_my_realm:" + digest_auth_my_real.username()
+            return "digest_auth_my_realm:" + digest_auth_my_realm.username()
 
         self.app = app
         self.basic_auth = basic_auth
@@ -134,7 +138,17 @@ class HTTPAuthTestCase(unittest.TestCase):
         response = self.client.get('/basic', 
             headers = { "Authorization": "Basic " + base64.b64encode(b'john:hello').decode('utf-8').strip("\r\n") })
         self.assertTrue(response.data.decode('utf-8') == "basic_auth:john")
+
+    def test_basic_auth_login_valid_with_hash1(self):
+        response = self.client.get('/basic-custom', 
+            headers = { "Authorization": "Basic " + base64.b64encode(b'john:hello').decode('utf-8').strip("\r\n") })
+        self.assertTrue(response.data.decode('utf-8') == "basic_custom_auth:john")
         
+    def test_basic_auth_login_valid_with_hash2(self):
+        response = self.client.get('/basic-with-realm', 
+            headers = { "Authorization": "Basic " + base64.b64encode(b'john:hello').decode('utf-8').strip("\r\n") })
+        self.assertTrue(response.data.decode('utf-8') == "basic_auth_my_realm:john")
+
     def test_basic_auth_login_invalid(self):
         response = self.client.get('/basic-with-realm',
             headers = { "Authorization": "Basic " + base64.b64encode(b'john:bye').decode('utf-8').strip("\r\n") })
