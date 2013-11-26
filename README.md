@@ -31,6 +31,8 @@ Basic authentication example
     if __name__ == '__main__':
         app.run()
         
+Note: See the [documentation](http://pythonhosted.org/Flask-HTTPAuth) for more complex examples that involve password hashing and custom verification callbacks.
+
 Digest authentication example
 -----------------------------
 

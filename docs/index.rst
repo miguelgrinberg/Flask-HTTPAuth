@@ -55,6 +55,12 @@ If the hashing algorithm requires the username to be known then the callback can
         get_salt(username)
         return hash(password, salt)
 
+For the most degree of flexibility the `get_password` and `hash_password` callbacks can be replaced with `verify_password`::
+
+    @auth.verify_password
+    def verify_pw(username, password):
+        return call_custom_verify_function(username, password)
+
 Digest authentication example
 -----------------------------
 
@@ -99,7 +105,7 @@ API Documentation
         
   .. method:: get_password(password_callback)
 
-    *Required*. This callback function will be called by the framework to obtain the password for a given user. Example::
+    This callback function will be called by the framework to obtain the password for a given user. Example::
     
       @auth.get_password
       def get_password(username):
@@ -107,22 +113,35 @@ API Documentation
 
   .. method:: hash_password(hash_password_callback)
 
-    *Optional*. If defined, this callback function will be called by the framework to apply a custom hashing algorithm to the password provided by the client. If this callback isn't provided the password will be checked unchanged. The callback can take one or two arguments. The one argument version receives the password to hash, while the two argument version receives the username and the password in that order. Example single argument callback::
+    If defined, this callback function will be called by the framework to apply a custom hashing algorithm to the password provided by the client. If this callback isn't provided the password will be checked unchanged. The callback can take one or two arguments. The one argument version receives the password to hash, while the two argument version receives the username and the password in that order. Example single argument callback::
 
       @auth.hash_password
       def hash_password(password):
           return md5(password).hexdigest()
 
-Example two argument callback::
+    Example two argument callback::
 
-    @auth.hash_password
-    def hash_pw(username, password):
-        get_salt(username)
-        return hash(password, salt)
+      @auth.hash_password
+      def hash_pw(username, password):
+          get_salt(username)
+          return hash(password, salt)
+
+  .. method:: verify_password(verify_password_callback)
+
+    If defined, this callback function will be called by the framework to verify that the username and password combination provided by the client are valid. The callback function takes two arguments, the username and the password and must return ``True`` or ``False``. Example usage::
+
+      @auth.verify_password
+      def verify_password(username, password):
+          user = User.query.filter_by(username).first()
+          if not user:
+              return False
+          return passlib.hash.sha256_crypt.verify(password, user.password_hash)
+
+    Note that when a `verify_password` callback is provided the `get_password` and `hash_password` callbacks are not used.
 
   .. method:: error_handler(error_callback)
 
-    *Optional*. If defined, this callback function will be called by the framework when it is necessary to send an authentication error back to the client. The return value from this function can be the body of the response as a string or it can also be a response object created with `make_response`. If this callback isn't provided a default error response is generated. Example::
+    If defined, this callback function will be called by the framework when it is necessary to send an authentication error back to the client. The return value from this function can be the body of the response as a string or it can also be a response object created with `make_response`. If this callback isn't provided a default error response is generated. Example::
     
       @auth.error_handler
       def auth_error():
@@ -130,7 +149,7 @@ Example two argument callback::
 
   .. method:: login_required(view_function_callback)
         
-    *Required*. This callback function will be called when authentication is succesful. This will typically be a Flask view function. Example::
+    This callback function will be called when authentication is succesful. This will typically be a Flask view function. Example::
 
       @app.route('/private')
       @auth.login_required
@@ -152,15 +171,15 @@ Example two argument callback::
         
   .. method:: get_password(password_callback)
 
-    *Required*. See basic authentication for documentation and examples.
+    See basic authentication for documentation and examples.
     
   .. method:: error_handler(error_callback)
 
-    *Optional*. See basic authentication for documentation and examples.
+    See basic authentication for documentation and examples.
     
   .. method:: login_required(view_function_callback)
         
-    *Required*.  See basic authentication for documentation and examples.
+    See basic authentication for documentation and examples.
 
   .. method:: username()
 

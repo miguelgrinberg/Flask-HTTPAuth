@@ -47,8 +47,8 @@ class HTTPAuth(object):
             if not auth:
                 return self.auth_error_callback()
             password = self.get_password_callback(auth.username)
-            if not password:
-                return self.auth_error_callback()
+            #if not password:
+            #    return self.auth_error_callback()
             if not self.authenticate(auth, password):
                 return self.auth_error_callback()
             return f(*args, **kwargs)
@@ -61,21 +61,27 @@ class HTTPBasicAuth(HTTPAuth):
     def __init__(self):
         super(HTTPBasicAuth, self).__init__()
         self.hash_password(None)
+        self.verify_password(None)
 
     def hash_password(self, f):
         self.hash_password_callback = f
 
+    def verify_password(self, f):
+        self.verify_password_callback = f
+
     def authenticate_header(self):
         return 'Basic realm="' + self.realm + '"'
 
-    def authenticate(self, auth, password):
+    def authenticate(self, auth, stored_password):
         client_password = auth.password
+        if self.verify_password_callback:
+            return self.verify_password_callback(auth.username, client_password)
         if self.hash_password_callback:
             try:
                 client_password = self.hash_password_callback(client_password)
             except TypeError:
                 client_password = self.hash_password_callback(auth.username, client_password)
-        return client_password == password
+        return client_password == stored_password
 
 class HTTPDigestAuth(HTTPAuth):
     def __init__(self):
