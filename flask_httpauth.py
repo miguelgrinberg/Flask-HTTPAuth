@@ -26,6 +26,7 @@ class HTTPAuth(object):
 
     def get_password(self, f):
         self.get_password_callback = f
+        return f
 
     def error_handler(self, f):
         @wraps(f)
