@@ -20,7 +20,7 @@ Basic authentication example
     @auth.get_password
     def get_pw(username):
         if username in users:
-            return users[username]
+            return users.get(username)
         return None
     
     @app.route('/')
@@ -51,7 +51,7 @@ Digest authentication example
     @auth.get_password
     def get_pw(username):
         if username in users:
-            return users[username]
+            return users.get(username)
         return None
         
     @app.route('/')

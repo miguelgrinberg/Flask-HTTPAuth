@@ -27,7 +27,7 @@ The following example application uses HTTP Basic authentication to protect rout
     @auth.get_password
     def get_pw(username):
         if username in users:
-            return users[username]
+            return users.get(username)
         return None
     
     @app.route('/')
@@ -81,7 +81,7 @@ The following example is similar to the previous one, but HTTP Digest authentica
     @auth.get_password
     def get_pw(username):
         if username in users:
-            return users[username]
+            return users.get(username)
         return None
         
     @app.route('/')
