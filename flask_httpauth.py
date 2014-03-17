@@ -4,7 +4,7 @@ flask.ext.httpauth
 
 This module provides Basic and Digest HTTP authentication for Flask routes.
 
-:copyright: (C) 2013 by Miguel Grinberg.
+:copyright: (C) 2014 by Miguel Grinberg.
 :license:   BSD, see LICENSE for more details.
 """
 
@@ -48,8 +48,6 @@ class HTTPAuth(object):
             if not auth:
                 return self.auth_error_callback()
             password = self.get_password_callback(auth.username)
-            #if not password:
-            #    return self.auth_error_callback()
             if not self.authenticate(auth, password):
                 return self.auth_error_callback()
             return f(*args, **kwargs)
@@ -102,7 +100,7 @@ class HTTPDigestAuth(HTTPAuth):
         return 'Digest realm="' + self.realm + '",nonce="' + session["auth_nonce"] + '",opaque="' + session["auth_opaque"] + '"'
 
     def authenticate(self, auth, password):
-        if not auth.username or not auth.realm or not auth.uri or not auth.nonce or not auth.response:
+        if not auth.username or not auth.realm or not auth.uri or not auth.nonce or not auth.response or not password:
             return False
         if auth.nonce != session.get("auth_nonce") or auth.opaque != session.get("auth_opaque"):
             return False
