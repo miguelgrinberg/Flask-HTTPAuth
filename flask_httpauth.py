@@ -45,11 +45,16 @@ class HTTPAuth(object):
         @wraps(f)
         def decorated(*args, **kwargs):
             auth = request.authorization
-            if not auth:
-                return self.auth_error_callback()
-            password = self.get_password_callback(auth.username)
-            if not self.authenticate(auth, password):
-                return self.auth_error_callback()
+            # We need to ignore authentication headers for OPTIONS to avoid
+            # unwanted interactions with CORS.
+            # Chrome and Firefox issue a preflight OPTIONS request to check
+            # Access-Control-* headers, and will fail if it returns 401.
+            if request.method != 'OPTIONS':
+                if not auth:
+                    return self.auth_error_callback()
+                password = self.get_password_callback(auth.username)
+                if not self.authenticate(auth, password):
+                    return self.auth_error_callback()
             return f(*args, **kwargs)
         return decorated
 
@@ -93,7 +98,7 @@ class HTTPDigestAuth(HTTPAuth):
 
     def get_nonce(self):
         return md5(str(self.random.random()).encode('utf-8')).hexdigest()
-        
+
     def authenticate_header(self):
         session["auth_nonce"] = self.get_nonce()
         session["auth_opaque"] = self.get_nonce()

@@ -24,7 +24,7 @@ class HTTPAuthTestCase(unittest.TestCase):
         digest_auth = HTTPDigestAuth()
         digest_auth_my_realm = HTTPDigestAuth()
         digest_auth_my_realm.realm = 'My Realm'
-        
+
         @basic_auth.get_password
         def get_basic_password(username):
             if username == 'john':
@@ -80,7 +80,7 @@ class HTTPAuthTestCase(unittest.TestCase):
                 return 'bye'
             else:
                 return None
-        
+
         @digest_auth_my_realm.get_password
         def get_digest_password(username):
             if username == 'susan':
@@ -89,16 +89,16 @@ class HTTPAuthTestCase(unittest.TestCase):
                 return 'bye'
             else:
                 return None
-                
+
         @app.route('/')
         def index():
             return 'index'
-            
+
         @app.route('/basic')
         @basic_auth.login_required
         def basic_auth_route():
             return 'basic_auth:' + basic_auth.username()
-            
+
         @app.route('/basic-with-realm')
         @basic_auth_my_realm.login_required
         def basic_auth_my_realm_route():
@@ -118,7 +118,7 @@ class HTTPAuthTestCase(unittest.TestCase):
         @digest_auth.login_required
         def digest_auth_route():
             return 'digest_auth:' + digest_auth.username()
-        
+
         @app.route('/digest-with-realm')
         @digest_auth_my_realm.login_required
         def digest_auth_my_realm_route():
@@ -131,7 +131,7 @@ class HTTPAuthTestCase(unittest.TestCase):
         self.basic_verify_auth = basic_verify_auth
         self.digest_auth = digest_auth
         self.client = app.test_client()
-        
+
     def test_no_auth(self):
         response = self.client.get('/')
         self.assertTrue(response.data.decode('utf-8') == 'index')
@@ -142,6 +142,11 @@ class HTTPAuthTestCase(unittest.TestCase):
         self.assertTrue('WWW-Authenticate' in response.headers)
         self.assertTrue(response.headers['WWW-Authenticate'] == 'Basic realm="Authentication Required"')
 
+    def test_basic_auth_ignore_options(self):
+        response = self.client.options('/basic')
+        self.assertTrue(response.status_code == 200)
+        self.assertTrue('WWW-Authenticate' not in response.headers)
+
     def test_basic_auth_prompt_with_custom_realm(self):
         response = self.client.get('/basic-with-realm')
         self.assertTrue(response.status_code == 401)
@@ -150,17 +155,17 @@ class HTTPAuthTestCase(unittest.TestCase):
         self.assertTrue(response.data.decode('utf-8') == 'custom error')
 
     def test_basic_auth_login_valid(self):
-        response = self.client.get('/basic', 
+        response = self.client.get('/basic',
             headers = { 'Authorization': 'Basic ' + base64.b64encode(b'john:hello').decode('utf-8').strip('\r\n') })
         self.assertTrue(response.data.decode('utf-8') == 'basic_auth:john')
 
     def test_basic_auth_login_valid_with_hash1(self):
-        response = self.client.get('/basic-custom', 
+        response = self.client.get('/basic-custom',
             headers = { 'Authorization': 'Basic ' + base64.b64encode(b'john:hello').decode('utf-8').strip('\r\n') })
         self.assertTrue(response.data.decode('utf-8') == 'basic_custom_auth:john')
-        
+
     def test_basic_auth_login_valid_with_hash2(self):
-        response = self.client.get('/basic-with-realm', 
+        response = self.client.get('/basic-with-realm',
             headers = { 'Authorization': 'Basic ' + base64.b64encode(b'john:hello').decode('utf-8').strip('\r\n') })
         self.assertTrue(response.data.decode('utf-8') == 'basic_auth_my_realm:john')
 
@@ -199,6 +204,11 @@ class HTTPAuthTestCase(unittest.TestCase):
         self.assertTrue('WWW-Authenticate' in response.headers)
         self.assertTrue(re.match(r'^Digest realm="Authentication Required",nonce="[0-9a-f]+",opaque="[0-9a-f]+"$', response.headers['WWW-Authenticate']))
 
+    def test_digest_auth_ignore_options(self):
+        response = self.client.options('/digest')
+        self.assertTrue(response.status_code == 200)
+        self.assertTrue('WWW-Authenticate' not in response.headers)
+
     def test_digest_auth_prompt_with_custom_realm(self):
         response = self.client.get('/digest-with-realm')
         self.assertTrue(response.status_code == 401)
@@ -219,7 +229,7 @@ class HTTPAuthTestCase(unittest.TestCase):
         a3 = ha1 + ':' + d['nonce'] + ':' + ha2
         auth_response = md5(a3).hexdigest()
 
-        response = self.client.get('/digest', 
+        response = self.client.get('/digest',
             headers = { 'Authorization': 'Digest username="john",realm="' + d['realm'] + '",nonce="' + d['nonce'] + '",uri="/digest",response="' + auth_response + '",opaque="' + d['opaque'] + '"' })
         self.assertTrue(response.data == b'digest_auth:john')
 
@@ -237,19 +247,19 @@ class HTTPAuthTestCase(unittest.TestCase):
         a3 = ha1 + ':' + d['nonce'] + ':' + ha2
         auth_response = md5(a3).hexdigest()
 
-        response = self.client.get('/digest', 
+        response = self.client.get('/digest',
             headers = { 'Authorization': 'Digest username="john",realm="' + d['realm'] + '",nonce="' + d['nonce'] + '",uri="/digest",response="' + auth_response + '",opaque="' + d['opaque'] + '"' })
         self.assertTrue(response.status_code == 401)
         self.assertTrue('WWW-Authenticate' in response.headers)
         self.assertTrue(re.match(r'^Digest realm="Authentication Required",nonce="[0-9a-f]+",opaque="[0-9a-f]+"$', response.headers['WWW-Authenticate']))
-        
+
     def test_digest_auth_login_invalid(self):
-        response = self.client.get('/digest-with-realm', 
+        response = self.client.get('/digest-with-realm',
             headers = { "Authorization": 'Digest username="susan",realm="My Realm",nonce="dcd98b7102dd2f0e8b11d0f600bfb0c093",uri="/digest-with-realm",response="ca306c361a9055b968810067a37fb8cb",opaque="5ccc069c403ebaf9f0171e9517f40e41"' })
         self.assertTrue(response.status_code == 401)
         self.assertTrue('WWW-Authenticate' in response.headers)
         self.assertTrue(re.match(r'^Digest realm="My Realm",nonce="[0-9a-f]+",opaque="[0-9a-f]+"$', response.headers['WWW-Authenticate']))
-        
+
     def test_digest_auth_login_invalid2(self):
         response = self.client.get('/digest')
         self.assertTrue(response.status_code == 401)
