@@ -69,9 +69,11 @@ class HTTPBasicAuth(HTTPAuth):
 
     def hash_password(self, f):
         self.hash_password_callback = f
+        return f
 
     def verify_password(self, f):
         self.verify_password_callback = f
+        return f
 
     def authenticate_header(self):
         return 'Basic realm="' + self.realm + '"'
