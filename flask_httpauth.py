@@ -89,7 +89,7 @@ class HTTPBasicAuth(HTTPAuth):
                 client_password = self.hash_password_callback(auth.username, client_password)
         return client_password == stored_password
 
-class HTTPDigestAuth(HTTPAuth):
+class HTTPDigestAuth(HTTPBasicAuth):
     def __init__(self):
         super(HTTPDigestAuth, self).__init__()
         self.random = SystemRandom()
