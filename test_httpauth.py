@@ -6,6 +6,9 @@ from flask import Flask
 from flask.ext.httpauth import HTTPBasicAuth, HTTPDigestAuth
 from werkzeug.http import parse_dict_header
 
+users = {'john': 'my-secret'}
+
+
 def md5(str):
     if type(str).__name__ == 'str':
         str = str.encode('utf-8')
@@ -280,8 +283,84 @@ class HTTPAuthTestCase(unittest.TestCase):
         self.assertTrue('WWW-Authenticate' in response.headers)
         self.assertTrue(re.match(r'^Digest realm="Authentication Required",nonce="[0-9a-f]+",opaque="[0-9a-f]+"$', response.headers['WWW-Authenticate']))
 
-def suite():
-    return unittest.makeSuite(HTTPAuthTestCase)
+
+class HTTPDigestAuthTestCase(unittest.TestCase):
+    def setUp(self):
+        app = Flask(__name__)
+        app.config['SECRET_KEY'] = 'my secret'
+
+        auth = HTTPDigestAuth()
+        auth.realm = 'Digest Realm'
+
+        @auth.hash_password
+        def hash_password(username, password):
+            return username + password
+
+        @auth.get_password
+        def get_password(username):
+            try:
+                return users[username]
+            except KeyError:
+                pass
+            return None
+
+        @auth.verify_password
+        def verify_password(username, password):
+            try:
+                return users[username] == 'my-secret'
+            except KeyError:
+                pass
+            return False
+
+        @app.route('/digest')
+        @auth.login_required
+        def index():
+            return 'digest_auth:' + auth.username()
+
+        self.app = app
+        self.auth = auth
+        self.client = app.test_client()
+
+    @property
+    def authenticate_pattern(self):
+        return re.compile(r'^Digest realm="%s",nonce="[0-9a-f]+",opaque="[0-9a-f]+"$' % self.auth.realm)
+
+    def test_auth_prompt(self):
+        response = self.client.get('/digest')
+        self.assertTrue(response.status_code == 401)
+        self.assertTrue('WWW-Authenticate' in response.headers)
+        self.assertTrue(self.authenticate_pattern.match(response.headers['WWW-Authenticate']))
+
+    def test_login_invalid(self):
+        response = self.client.get('/digest', headers={
+            "Authorization": 'Digest username="susan",realm="Digest Realm",nonce="dcd98b7102dd2f0e8b11d0f600bfb0c093",'
+                             'uri="/digest",response="ca306c361a9055b968810067a37fb8cb",'
+                             'opaque="5ccc069c403ebaf9f0171e9517f40e41"'})
+        self.assertTrue(response.status_code == 401)
+        self.assertTrue('WWW-Authenticate' in response.headers)
+        self.assertTrue(self.authenticate_pattern.match(response.headers['WWW-Authenticate']))
+
+    def test_login_valid(self):
+        response = self.client.get('/digest')
+        self.assertTrue(response.status_code == 401)
+        header = response.headers.get('WWW-Authenticate')
+        auth_type, auth_info = header.split(None, 1)
+        d = parse_dict_header(auth_info)
+
+        username = 'john'
+
+        a1 = username + ':' + d['realm'] + ':' + users[username]
+        ha1 = md5(a1).hexdigest()
+        a2 = 'GET:/digest'
+        ha2 = md5(a2).hexdigest()
+        a3 = ha1 + ':' + d['nonce'] + ':' + ha2
+        auth_response = md5(a3).hexdigest()
+
+        auth_header = 'Digest username="%s",realm="%s",nonce="%s",uri="/digest",response="%s",opaque="%s"' % \
+                      (username, d['realm'], d['nonce'], auth_response, d['opaque'])
+        response = self.client.get('/digest', headers={'Authorization': auth_header})
+        self.assertTrue(response.data == b'digest_auth:'+username)
+
 
 if __name__ == '__main__':
-    unittest.main(defaultTest = 'suite')
+    unittest.main()
