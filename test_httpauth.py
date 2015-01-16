@@ -159,27 +159,27 @@ class HTTPAuthTestCase(unittest.TestCase):
         self.assertEqual(response.data.decode('utf-8'), 'custom error')
 
     def test_basic_auth_login_valid(self):
-        creds = base64.b64encode(b'john:hello').decode('utf-8').strip('\r\n')
+        creds = base64.b64encode(b'john:hello').decode('utf-8')
         response = self.client.get(
             '/basic', headers={'Authorization': 'Basic ' + creds})
         self.assertEqual(response.data.decode('utf-8'), 'basic_auth:john')
 
     def test_basic_auth_login_valid_with_hash1(self):
-        creds = base64.b64encode(b'john:hello').decode('utf-8').strip('\r\n')
+        creds = base64.b64encode(b'john:hello').decode('utf-8')
         response = self.client.get(
             '/basic-custom', headers={'Authorization': 'Basic ' + creds})
         self.assertEqual(response.data.decode('utf-8'),
                          'basic_custom_auth:john')
 
     def test_basic_auth_login_valid_with_hash2(self):
-        creds = base64.b64encode(b'john:hello').decode('utf-8').strip('\r\n')
+        creds = base64.b64encode(b'john:hello').decode('utf-8')
         response = self.client.get(
             '/basic-with-realm', headers={'Authorization': 'Basic ' + creds})
         self.assertEqual(response.data.decode('utf-8'),
                          'basic_auth_my_realm:john')
 
     def test_basic_auth_login_invalid(self):
-        creds = base64.b64encode(b'john:bye').decode('utf-8').strip('\r\n')
+        creds = base64.b64encode(b'john:bye').decode('utf-8')
         response = self.client.get(
             '/basic-with-realm', headers={'Authorization': 'Basic ' + creds})
         self.assertEqual(response.status_code, 401)
@@ -188,26 +188,26 @@ class HTTPAuthTestCase(unittest.TestCase):
                          'Basic realm="My Realm"')
 
     def test_basic_custom_auth_login_valid(self):
-        creds = base64.b64encode(b'john:hello').decode('utf-8').strip('\r\n')
+        creds = base64.b64encode(b'john:hello').decode('utf-8')
         response = self.client.get(
             '/basic-custom', headers={'Authorization': 'Basic ' + creds})
         self.assertEqual(response.data, b'basic_custom_auth:john')
 
     def test_basic_custom_auth_login_invalid(self):
-        creds = base64.b64encode(b'john:bye').decode('utf-8').strip('\r\n')
+        creds = base64.b64encode(b'john:bye').decode('utf-8')
         response = self.client.get(
             '/basic-custom', headers={"Authorization": "Basic " + creds})
         self.assertEqual(response.status_code, 401)
         self.assertIn("WWW-Authenticate", response.headers)
 
     def test_verify_auth_login_valid(self):
-        creds = base64.b64encode(b'susan:bye').decode('utf-8').strip('\r\n')
+        creds = base64.b64encode(b'susan:bye').decode('utf-8')
         response = self.client.get(
             '/basic-verify', headers={'Authorization': 'Basic ' + creds})
         self.assertEqual(response.data, b'basic_verify_auth:susan')
 
     def test_verify_auth_login_invalid(self):
-        creds = base64.b64encode(b'john:bye').decode('utf-8').strip('\r\n')
+        creds = base64.b64encode(b'john:bye').decode('utf-8')
         response = self.client.get(
             '/basic-verify', headers={'Authorization': 'Basic ' + creds})
         self.assertEqual(response.status_code, 401)
