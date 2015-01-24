@@ -14,7 +14,7 @@ def md5(str):
 
 def get_ha1(user, pw, realm):
     a1 = user + ":" + realm + ":" + pw
-    return md5(a1.encode('utf-8')).hexdigest()
+    return md5(a1).hexdigest()
 
 class HTTPAuthTestCase(unittest.TestCase):
     def setUp(self):
@@ -33,6 +33,7 @@ class HTTPAuthTestCase(unittest.TestCase):
 
         @digest_auth_ha1_pw.get_password
         def get_digest_password(username):
+
             if username == 'susan':
                 return get_ha1(username, 'hello', digest_auth_ha1_pw.realm)
             elif username == 'john':
@@ -285,7 +286,7 @@ class HTTPAuthTestCase(unittest.TestCase):
 
         a1 = 'john:' + d['realm'] + ':bye'
         ha1 = md5(a1).hexdigest()
-        a2 = 'GET:/digest'
+        a2 = 'GET:/digest_ha1_pw'
         ha2 = md5(a2).hexdigest()
         a3 = ha1 + ':' + d['nonce'] + ':' + ha2
         auth_response = md5(a3).hexdigest()
@@ -293,7 +294,7 @@ class HTTPAuthTestCase(unittest.TestCase):
         response = self.client.get(
             '/digest', headers={
                 'Authorization': 'Digest username="john",realm="{0}",'
-                                 'nonce="{1}",uri="/digest",response="{2}",'
+                                 'nonce="{1}",uri="/digest_ha1_pw",response="{2}",'
                                  'opaque="{3}"'.format(d['realm'],
                                                        d['nonce'],
                                                        auth_response,
