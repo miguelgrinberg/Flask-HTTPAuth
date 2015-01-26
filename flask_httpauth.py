@@ -107,6 +107,11 @@ class HTTPDigestAuth(HTTPAuth):
     def get_nonce(self):
         return md5(str(self.random.random()).encode('utf-8')).hexdigest()
 
+    def generate_ha1(self, username, password):
+        a1 = username + ":" + self.realm + ":" + password
+        a1 = a1.encode('utf-8')
+        return md5(a1).hexdigest()
+
     def authenticate_header(self):
         session["auth_nonce"] = self.get_nonce()
         session["auth_opaque"] = self.get_nonce()

@@ -33,7 +33,6 @@ class HTTPAuthTestCase(unittest.TestCase):
 
         @digest_auth_ha1_pw.get_password
         def get_digest_password(username):
-
             if username == 'susan':
                 return get_ha1(username, 'hello', digest_auth_ha1_pw.realm)
             elif username == 'john':
@@ -370,6 +369,11 @@ class HTTPAuthTestCase(unittest.TestCase):
         self.assertTrue(re.match(r'^Digest realm="Authentication Required",'
                                  r'nonce="[0-9a-f]+",opaque="[0-9a-f]+"$',
                                  response.headers['WWW-Authenticate']))
+
+    def test_digest_generate_ha1(self):
+        ha1 = self.digest_auth.generate_ha1('pawel', 'test')
+        ha1_expected = get_ha1('pawel', 'test', self.digest_auth.realm)
+        self.assertEqual(ha1, ha1_expected)
 
 
 def suite():
