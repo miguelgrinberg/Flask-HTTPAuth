@@ -52,15 +52,18 @@ class HTTPAuth(object):
             # Chrome and Firefox issue a preflight OPTIONS request to check
             # Access-Control-* headers, and will fail if it returns 401.
             if request.method != 'OPTIONS':
-                if not auth:
-                    return self.auth_error_callback()
-                password = self.get_password_callback(auth.username)
+                if auth:
+                    password = self.get_password_callback(auth.username)
+                else:
+                    password = None
                 if not self.authenticate(auth, password):
                     return self.auth_error_callback()
             return f(*args, **kwargs)
         return decorated
 
     def username(self):
+        if not request.authorization:
+            return ""
         return request.authorization.username
 
 
@@ -82,14 +85,21 @@ class HTTPBasicAuth(HTTPAuth):
         return 'Basic realm="{0}"'.format(self.realm)
 
     def authenticate(self, auth, stored_password):
-        client_password = auth.password
+        if auth:
+            username = auth.username
+            client_password = auth.password
+        else:
+            username = ""
+            client_password = ""
         if self.verify_password_callback:
-            return self.verify_password_callback(auth.username, client_password)
+            return self.verify_password_callback(username, client_password)
+        if not auth:
+            return False
         if self.hash_password_callback:
             try:
                 client_password = self.hash_password_callback(client_password)
             except TypeError:
-                client_password = self.hash_password_callback(auth.username,
+                client_password = self.hash_password_callback(username,
                                                               client_password)
         return client_password == stored_password
 
@@ -113,7 +123,7 @@ class HTTPDigestAuth(HTTPAuth):
             self.realm, session["auth_nonce"], session["auth_opaque"])
 
     def authenticate(self, auth, password):
-        if not auth.username or not auth.realm or not auth.uri \
+        if not auth or not auth.username or not auth.realm or not auth.uri \
                 or not auth.nonce or not auth.response or not password:
             return False
         if auth.nonce != session.get("auth_nonce") or \

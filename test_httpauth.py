@@ -2,7 +2,7 @@ import unittest
 import base64
 import re
 from hashlib import md5 as basic_md5
-from flask import Flask
+from flask import Flask, g
 from flask.ext.httpauth import HTTPBasicAuth, HTTPDigestAuth
 from werkzeug.http import parse_dict_header
 
@@ -68,10 +68,14 @@ class HTTPAuthTestCase(unittest.TestCase):
 
         @basic_verify_auth.verify_password
         def basic_verify_auth_verify_password(username, password):
+            g.anon = False
             if username == 'john':
                 return password == 'hello'
             elif username == 'susan':
                 return password == 'bye'
+            elif username == '':
+                g.anon = True
+                return True
             return False
 
         @digest_auth.get_password
@@ -114,7 +118,8 @@ class HTTPAuthTestCase(unittest.TestCase):
         @app.route('/basic-verify')
         @basic_verify_auth.login_required
         def basic_verify_auth_route():
-            return 'basic_verify_auth:' + basic_verify_auth.username()
+            return 'basic_verify_auth:' + basic_verify_auth.username() + \
+                ' anon:' + str(g.anon)
 
         @app.route('/digest')
         @digest_auth.login_required
@@ -204,7 +209,12 @@ class HTTPAuthTestCase(unittest.TestCase):
         creds = base64.b64encode(b'susan:bye').decode('utf-8')
         response = self.client.get(
             '/basic-verify', headers={'Authorization': 'Basic ' + creds})
-        self.assertEqual(response.data, b'basic_verify_auth:susan')
+        self.assertEqual(response.data, b'basic_verify_auth:susan anon:False')
+
+    def test_verify_auth_login_empty(self):
+        creds = base64.b64encode(b'susan:bye').decode('utf-8')
+        response = self.client.get('/basic-verify')
+        self.assertEqual(response.data, b'basic_verify_auth: anon:True')
 
     def test_verify_auth_login_invalid(self):
         creds = base64.b64encode(b'john:bye').decode('utf-8')

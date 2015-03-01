@@ -137,11 +137,13 @@ API Documentation
               return False
           return passlib.hash.sha256_crypt.verify(password, user.password_hash)
 
-    Note that when a `verify_password` callback is provided the `get_password` and `hash_password` callbacks are not used.
+    If this callback is defined, it is also invoked when the request does not have the ``Authorization`` header with user credentials, and in this case both the ``username`` and ``password`` arguments are set to empty strings. The client can opt to return ``True`` and that will allow anonymous users access to the route. The callback function can indicate that the user is anonymous by writing a state variable to ``flask.g``, which the route can then check to generate an appropriate response.
+
+    Note that when a ``verify_password`` callback is provided the ``get_password`` and ``hash_password`` callbacks are not used.
 
   .. method:: error_handler(error_callback)
 
-    If defined, this callback function will be called by the framework when it is necessary to send an authentication error back to the client. The return value from this function can be the body of the response as a string or it can also be a response object created with `make_response`. If this callback isn't provided a default error response is generated. Example::
+    If defined, this callback function will be called by the framework when it is necessary to send an authentication error back to the client. The return value from this function can be the body of the response as a string or it can also be a response object created with ``make_response``. If this callback isn't provided a default error response is generated. Example::
     
       @auth.error_handler
       def auth_error():
