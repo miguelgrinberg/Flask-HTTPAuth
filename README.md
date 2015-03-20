@@ -7,7 +7,7 @@ Basic authentication example
 ----------------------------
 
     from flask import Flask
-    from flask.ext.httpauth import HTTPBasicAuth
+    from flask_httpauth import HTTPBasicAuth
     
     app = Flask(__name__)
     auth = HTTPBasicAuth()
@@ -37,7 +37,7 @@ Digest authentication example
 -----------------------------
 
     from flask import Flask
-    from flask.ext.httpauth import HTTPDigestAuth
+    from flask_httpauth import HTTPDigestAuth
     
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'secret key here'
