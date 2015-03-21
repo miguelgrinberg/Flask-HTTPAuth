@@ -3,7 +3,7 @@ import base64
 import re
 from hashlib import md5 as basic_md5
 from flask import Flask, g
-from flask.ext.httpauth import HTTPBasicAuth, HTTPDigestAuth
+from flask_httpauth import HTTPBasicAuth, HTTPDigestAuth
 from werkzeug.http import parse_dict_header
 
 

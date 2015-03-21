@@ -1,5 +1,5 @@
 """
-flask.ext.httpauth
+flask_httpauth
 ==================
 
 This module provides Basic and Digest HTTP authentication for Flask routes.

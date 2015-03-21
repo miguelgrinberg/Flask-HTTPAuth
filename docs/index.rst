@@ -14,7 +14,7 @@ Basic authentication example
 The following example application uses HTTP Basic authentication to protect route ``'/'``::
 
     from flask import Flask
-    from flask.ext.httpauth import HTTPBasicAuth
+    from flask_httpauth import HTTPBasicAuth
     
     app = Flask(__name__)
     auth = HTTPBasicAuth()
@@ -67,7 +67,7 @@ Digest authentication example
 The following example is similar to the previous one, but HTTP Digest authentication is used::
 
     from flask import Flask
-    from flask.ext.httpauth import HTTPDigestAuth
+    from flask_httpauth import HTTPDigestAuth
     
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'secret key here'
@@ -167,7 +167,7 @@ API Documentation
       def index():
           return "Hello, %s!" % auth.username()
 
-.. class:: flask.ext.httpauth.HTTPDigestAuth
+.. class:: flask_httpauth.HTTPDigestAuth
 
   This class that handles HTTP Digest authentication for Flask routes. The ``SECRET_KEY`` configuration must be set in the Flask application to enable the session to work. Flask by default stores user sessions in the client as secure cookies, so the client must be able to handle cookies. To support clients that are not web browsers or that cannot handle cookies a `session interface <http://flask.pocoo.org/docs/api/#flask.Flask.session_interface>`_ that writes sessions in the server must be used.
         
@@ -186,4 +186,3 @@ API Documentation
   .. method:: username()
 
     See basic authentication for documentation and examples.
-
