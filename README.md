@@ -62,6 +62,11 @@ Digest authentication example
     if __name__ == '__main__':
         app.run()
 
+WSGI Considerations
+-------------------
+
+Make sure to set `WSGIPassAuthorization On` as [documented here](https://code.google.com/p/modwsgi/wiki/ConfigurationDirectives#WSGIPassAuthorization) to prevent the frontend web server from consuming the authorization header.
+
 Resources
 ---------
 
