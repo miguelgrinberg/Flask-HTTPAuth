@@ -94,6 +94,11 @@ The following example is similar to the previous one, but HTTP Digest authentica
 
 Note that because digest authentication stores data in Flask's ``session`` object the configuration must have a ``SECRET_KEY`` set.
 
+WSGI Considerations
+-------------------
+
+Make sure to set `WSGIPassAuthorization On` as `documented here <https://code.google.com/p/modwsgi/wiki/ConfigurationDirectives#WSGIPassAuthorization/>`_ to prevent the frontend web server from consuming the authorization header.
+
 API Documentation
 -----------------
 
