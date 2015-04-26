@@ -62,14 +62,6 @@ Digest authentication example
     if __name__ == '__main__':
         app.run()
 
-WSGI Considerations
--------------------
-
-Make sure that the authorization headers are passed through to your application.  Otherwise, your callbacks will have empty values for the user & password.  Here are the directives needed for the following web servers.
-
-- Apache: set `WSGIPassAuthorization On` as [documented here](https://code.google.com/p/modwsgi/wiki/ConfigurationDirectives#WSGIPassAuthorization).
-- Nginx: set `wsgi_pass_authorization on` as [documented here](http://wiki.nginx.org/NgxWSGIModule)
-
 Resources
 ---------
 

@@ -94,13 +94,10 @@ The following example is similar to the previous one, but HTTP Digest authentica
 
 Note that because digest authentication stores data in Flask's ``session`` object the configuration must have a ``SECRET_KEY`` set.
 
-WSGI Considerations
--------------------
+Deployment Considerations
+-------------------------
 
-Make sure that the authorization headers are passed through to your application.  Otherwise, your callbacks will have empty values for the user & password.  Here are the directives needed for the following web servers.
-
-- Apache: set ``WSGIPassAuthorization On`` as `documented here <https://code.google.com/p/modwsgi/wiki/ConfigurationDirectives#WSGIPassAuthorization/>`_.
-- Nginx: set ``wsgi_pass_authorization on`` as `documented here <http://wiki.nginx.org/NgxWSGIModule/>`_.
+Be aware that some web servers do not pass the ``Authorization`` headers to the WSGI application by default. For example, if you use Apache with mod_wsgi, you have to set option ``WSGIPassAuthorization On`` as `documented here <https://code.google.com/p/modwsgi/wiki/ConfigurationDirectives#WSGIPassAuthorization/>`_.
 
 API Documentation
 -----------------
