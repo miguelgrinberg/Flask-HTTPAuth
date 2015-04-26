@@ -102,7 +102,11 @@ API Documentation
 .. class:: HTTPBasicAuth
 
   This class that handles HTTP Basic authentication for Flask routes.
-        
+
+  .. method:: __init__()
+
+    Create a basic authentication object.
+
   .. method:: get_password(password_callback)
 
     This callback function will be called by the framework to obtain the password for a given user. Example::
@@ -170,7 +174,15 @@ API Documentation
 .. class:: flask_httpauth.HTTPDigestAuth
 
   This class that handles HTTP Digest authentication for Flask routes. The ``SECRET_KEY`` configuration must be set in the Flask application to enable the session to work. Flask by default stores user sessions in the client as secure cookies, so the client must be able to handle cookies. To support clients that are not web browsers or that cannot handle cookies a `session interface <http://flask.pocoo.org/docs/api/#flask.Flask.session_interface>`_ that writes sessions in the server must be used.
-        
+
+  .. method:: __init__(self, use_ha1_pw=False)
+
+    Create a digest authentication object. If ``use_ha1_pw`` is False, then the ``get_password`` callback needs to return the plain text password for the given user. If ``use_ha1_pw`` is True, the ``get_password`` callback needs to return the HA1 value for the given user. The advantage of setting ``use_ha1_pw`` to ``True`` is that it allows the application to store the HA1 hash of the password in the user database.
+
+  .. method:: generate_ha1(username, password)
+
+    Generate the HA1 hash that can be stored in the user database when ``use_ha1_pw`` is set to True in the constructor.
+
   .. method:: get_password(password_callback)
 
     See basic authentication for documentation and examples.

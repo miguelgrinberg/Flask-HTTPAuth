@@ -128,17 +128,19 @@ class HTTPDigestAuth(HTTPAuth):
         return 'Digest realm="{0}",nonce="{1}",opaque="{2}"'.format(
             self.realm, session["auth_nonce"], session["auth_opaque"])
 
-    def authenticate(self, auth, password):
+    def authenticate(self, auth, stored_password_or_ha1):
         if not auth or not auth.username or not auth.realm or not auth.uri \
-                or not auth.nonce or not auth.response or not password:
+                or not auth.nonce or not auth.response \
+                or not stored_password_or_ha1:
             return False
         if auth.nonce != session.get("auth_nonce") or \
                 auth.opaque != session.get("auth_opaque"):
             return False
         if self.use_ha1_pw:
-            ha1 = password
+            ha1 = stored_password_or_ha1
         else:
-            a1 = auth.username + ":" + auth.realm + ":" + password
+            a1 = auth.username + ":" + auth.realm + ":" + \
+                stored_password_or_ha1
             ha1 = md5(a1.encode('utf-8')).hexdigest()
         a2 = request.method + ":" + auth.uri
         ha2 = md5(a2.encode('utf-8')).hexdigest()
