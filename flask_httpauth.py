@@ -105,8 +105,9 @@ class HTTPBasicAuth(HTTPAuth):
 
 
 class HTTPDigestAuth(HTTPAuth):
-    def __init__(self):
+    def __init__(self, use_ha1_pw = False):
         super(HTTPDigestAuth, self).__init__()
+        self.use_ha1_pw = use_ha1_pw
         self.random = SystemRandom()
         try:
             self.random.random()
@@ -115,6 +116,11 @@ class HTTPDigestAuth(HTTPAuth):
 
     def get_nonce(self):
         return md5(str(self.random.random()).encode('utf-8')).hexdigest()
+
+    def generate_ha1(self, username, password):
+        a1 = username + ":" + self.realm + ":" + password
+        a1 = a1.encode('utf-8')
+        return md5(a1).hexdigest()
 
     def authenticate_header(self):
         session["auth_nonce"] = self.get_nonce()
@@ -129,8 +135,11 @@ class HTTPDigestAuth(HTTPAuth):
         if auth.nonce != session.get("auth_nonce") or \
                 auth.opaque != session.get("auth_opaque"):
             return False
-        a1 = auth.username + ":" + auth.realm + ":" + password
-        ha1 = md5(a1.encode('utf-8')).hexdigest()
+        if self.use_ha1_pw:
+            ha1 = password
+        else:
+            a1 = auth.username + ":" + auth.realm + ":" + password
+            ha1 = md5(a1.encode('utf-8')).hexdigest()
         a2 = request.method + ":" + auth.uri
         ha2 = md5(a2.encode('utf-8')).hexdigest()
         a3 = ha1 + ":" + auth.nonce + ":" + ha2
