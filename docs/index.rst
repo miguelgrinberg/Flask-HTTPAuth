@@ -94,6 +94,40 @@ The following example is similar to the previous one, but HTTP Digest authentica
 
 Note that because digest authentication stores data in Flask's ``session`` object the configuration must have a ``SECRET_KEY`` set.
 
+Before request example
+-----------------------------
+
+The following example is similar to the previous one, but HTTP Digest authentication in all requests ::
+
+    from flask import Flask
+    from flask_httpauth import HTTPDigestAuth
+
+    app = Flask(__name__)
+    app.config['SECRET_KEY'] = 'secret key here'
+    auth = HTTPDigestAuth()
+
+    users = {
+        "john": "hello",
+        "susan": "bye"
+    }
+
+    @app.before_request
+    def before_request():
+      return auth.challenge()
+
+    @auth.get_password
+    def get_pw(username):
+        if username in users:
+            return users.get(username)
+        return None
+
+    @app.route('/')
+    def index():
+        return "Hello, %s!" % auth.username()
+
+    if __name__ == '__main__':
+        app.run()
+
 Deployment Considerations
 -------------------------
 
