@@ -46,18 +46,9 @@ class HTTPAuth(object):
     def login_required(self, f):
         @wraps(f)
         def decorated(*args, **kwargs):
-            auth = request.authorization
-            # We need to ignore authentication headers for OPTIONS to avoid
-            # unwanted interactions with CORS.
-            # Chrome and Firefox issue a preflight OPTIONS request to check
-            # Access-Control-* headers, and will fail if it returns 401.
-            if request.method != 'OPTIONS':
-                if auth:
-                    password = self.get_password_callback(auth.username)
-                else:
-                    password = None
-                if not self.authenticate(auth, password):
-                    return self.auth_error_callback()
+            error_callback = self.challenge()
+            if error_callback is not None:
+                return error_callback
             return f(*args, **kwargs)
         return decorated
 
@@ -65,6 +56,20 @@ class HTTPAuth(object):
         if not request.authorization:
             return ""
         return request.authorization.username
+
+    def challenge(self):
+        auth = request.authorization
+        # We need to ignore authentication headers for OPTIONS to avoid
+        # unwanted interactions with CORS.
+        # Chrome and Firefox issue a preflight OPTIONS request to check
+        # Access-Control-* headers, and will fail if it returns 401.
+        if request.method != 'OPTIONS':
+            if auth:
+                password = self.get_password_callback(auth.username)
+            else:
+                password = None
+            if not self.authenticate(auth, password):
+                return self.auth_error_callback()
 
 
 class HTTPBasicAuth(HTTPAuth):
