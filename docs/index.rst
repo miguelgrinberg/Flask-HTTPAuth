@@ -188,6 +188,38 @@ API Documentation
 
     Generate the HA1 hash that can be stored in the user database when ``use_ha1_pw`` is set to True in the constructor.
 
+  .. method:: generate_nonce(nonce_making_callback)
+
+    If defined, this callback function will be called by the framework to
+    generate a nonce.  If this is defined, ``verify_nonce`` should
+    also be defined.
+
+    This can be used to use a state storage mechanism other than the session.
+
+  .. method:: verify_nonce(nonce_verify_callback)
+
+    If defined, this callback function will be called by the framework to
+    verify that a nonce is valid.  It will be called with a single argument:
+    the nonce to be verified.
+
+    This can be used to use a state storage mechanism other than the session.
+
+  .. method:: generate_opaque(opaque_making_callback)
+
+    If defined, this callback function will be called by the framework to
+    generate an opaque value.  If this is defined, ``verify_opaque`` should
+    also be defined.
+
+    This can be used to use a state storage mechanism other than the session.
+
+  .. method:: verify_opaque(opaque_verify_callback)
+
+    If defined, this callback function will be called by the framework to
+    verify that an opaque value is valid.  It will be called with a single 
+    argument: the opaque value to be verified.
+
+    This can be used to use a state storage mechanism other than the session.
+
   .. method:: get_password(password_callback)
 
     See basic authentication for documentation and examples.

@@ -385,6 +385,57 @@ class HTTPAuthTestCase(unittest.TestCase):
         ha1_expected = get_ha1('pawel', 'test', self.digest_auth.realm)
         self.assertEqual(ha1, ha1_expected)
 
+    def test_digest_custom_nonce_checker(self):
+        @self.digest_auth.generate_nonce
+        def noncemaker():
+            return 'not a good nonce'
+
+        @self.digest_auth.generate_opaque
+        def opaquemaker():
+            return 'some opaque'
+
+        verify_nonce_called = []
+        @self.digest_auth.verify_nonce
+        def verify_nonce(provided_nonce):
+            verify_nonce_called.append(provided_nonce)
+            return True
+
+        verify_opaque_called = []
+        @self.digest_auth.verify_opaque
+        def verify_opaque(provided_opaque):
+            verify_opaque_called.append(provided_opaque)
+            return True
+
+        response = self.client.get('/digest')
+        self.assertEqual(response.status_code, 401)
+        header = response.headers.get('WWW-Authenticate')
+        auth_type, auth_info = header.split(None, 1)
+        d = parse_dict_header(auth_info)
+
+        self.assertEqual(d['nonce'], 'not a good nonce')
+        self.assertEqual(d['opaque'], 'some opaque')
+
+        a1 = 'john:' + d['realm'] + ':bye'
+        ha1 = md5(a1).hexdigest()
+        a2 = 'GET:/digest'
+        ha2 = md5(a2).hexdigest()
+        a3 = ha1 + ':' + d['nonce'] + ':' + ha2
+        auth_response = md5(a3).hexdigest()
+
+        response = self.client.get(
+            '/digest', headers={
+                'Authorization': 'Digest username="john",realm="{0}",'
+                                 'nonce="{1}",uri="/digest",response="{2}",'
+                                 'opaque="{3}"'.format(d['realm'],
+                                                       d['nonce'],
+                                                       auth_response,
+                                                       d['opaque'])})
+        self.assertEqual(response.data, b'digest_auth:john')
+        self.assertEqual(verify_nonce_called, ['not a good nonce'],
+            "Should have verified the nonce.")
+        self.assertEqual(verify_opaque_called, ['some opaque'],
+            "Should have verified the opaque.")
+
 
 def suite():
     return unittest.makeSuite(HTTPAuthTestCase)
