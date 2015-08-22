@@ -92,7 +92,37 @@ The following example is similar to the previous one, but HTTP Digest authentica
     if __name__ == '__main__':
         app.run()
 
-Note that because digest authentication stores data in Flask's ``session`` object the configuration must have a ``SECRET_KEY`` set.
+Security Concerns with Digest Authentication
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The digest authentication algorightm requires a *challenge* to be sent to the client for use in encrypting the password for transmission. This challenge needs to be used again when the password is decoded at the server, so the challenge information needs to be stored so that it can be recalled later.
+
+By default, Flask-HTTPAuth stores the challenge data in the Flask session. To make the authentication flow secure when using session storage, it is required that server-side sessions are used instead of the default Flask cookie based sessions, as this ensures that the challenge data is not at risk of being captured as it moves in a cookie between server and client. The Flask-Session and Flask-KVSession extensions are both very good options to implement server-side sessions.
+
+As an alternative to using server-side sessions, an application can implement its own generation and storage of challenge data. To do this, there are four callback functions that the application needs to implement::
+
+    @auth.generate_nonce
+    def generate_nonce():
+        """Return the nonce value to use for this client."""
+        pass
+
+    @auth.generate_opaque
+    def generate_opaque():
+        """Return the opaque value to use for this client."""
+        pass
+
+    @auth.verify_nonce
+    def verify_nonce(nonce):
+        """Verify that the nonce value sent by the client is correct."""
+        pass
+
+    @auth.verify_opaque
+    def verify_opaque(opaque):
+        """Verify that the opaque value sent by the client is correct."""
+        pass
+
+For information of what the ``nonce`` and ``opaque`` values are and how they are used in digest authentication, consult `RFC 2617 <http://tools.ietf.org/html/rfc2617#section-3.2.1>`_.
+
 
 Deployment Considerations
 -------------------------
