@@ -12,9 +12,11 @@ def md5(str):
         str = str.encode('utf-8')
     return basic_md5(str)
 
+
 def get_ha1(user, pw, realm):
     a1 = user + ":" + realm + ":" + pw
     return md5(a1).hexdigest()
+
 
 class HTTPAuthTestCase(unittest.TestCase):
     def setUp(self):
@@ -22,14 +24,14 @@ class HTTPAuthTestCase(unittest.TestCase):
         app.config['SECRET_KEY'] = 'my secret'
 
         basic_auth = HTTPBasicAuth()
-        basic_auth_my_realm = HTTPBasicAuth()
-        basic_auth_my_realm.realm = 'My Realm'
+        basic_auth_my_realm = HTTPBasicAuth(scheme='CustomBasic',
+                                            realm='My Realm')
         basic_custom_auth = HTTPBasicAuth()
         basic_verify_auth = HTTPBasicAuth()
         digest_auth = HTTPDigestAuth()
-        digest_auth_my_realm = HTTPDigestAuth()
-        digest_auth_my_realm.realm = 'My Realm'
-        digest_auth_ha1_pw = HTTPDigestAuth(use_ha1_pw = True)
+        digest_auth_my_realm = HTTPDigestAuth(scheme='CustomDigest',
+                                              realm='My Realm')
+        digest_auth_ha1_pw = HTTPDigestAuth(use_ha1_pw=True)
 
         @digest_auth_ha1_pw.get_password
         def get_digest_password(username):
@@ -92,7 +94,7 @@ class HTTPAuthTestCase(unittest.TestCase):
             return False
 
         @digest_auth.get_password
-        def get_digest_password(username):
+        def get_digest_password_2(username):
             if username == 'susan':
                 return 'hello'
             elif username == 'john':
@@ -101,7 +103,7 @@ class HTTPAuthTestCase(unittest.TestCase):
                 return None
 
         @digest_auth_my_realm.get_password
-        def get_digest_password_2(username):
+        def get_digest_password_3(username):
             if username == 'susan':
                 return 'hello'
             elif username == 'john':
@@ -178,7 +180,7 @@ class HTTPAuthTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 401)
         self.assertTrue('WWW-Authenticate' in response.headers)
         self.assertEqual(response.headers['WWW-Authenticate'],
-                         'Basic realm="My Realm"')
+                         'CustomBasic realm="My Realm"')
         self.assertEqual(response.data.decode('utf-8'), 'custom error')
 
     def test_basic_auth_login_valid(self):
@@ -208,7 +210,7 @@ class HTTPAuthTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 401)
         self.assertTrue('WWW-Authenticate' in response.headers)
         self.assertEqual(response.headers['WWW-Authenticate'],
-                         'Basic realm="My Realm"')
+                         'CustomBasic realm="My Realm"')
 
     def test_basic_custom_auth_login_valid(self):
         creds = base64.b64encode(b'john:hello').decode('utf-8')
@@ -230,7 +232,6 @@ class HTTPAuthTestCase(unittest.TestCase):
         self.assertEqual(response.data, b'basic_verify_auth:susan anon:False')
 
     def test_verify_auth_login_empty(self):
-        creds = base64.b64encode(b'susan:bye').decode('utf-8')
         response = self.client.get('/basic-verify')
         self.assertEqual(response.data, b'basic_verify_auth: anon:True')
 
@@ -258,8 +259,8 @@ class HTTPAuthTestCase(unittest.TestCase):
         response = self.client.get('/digest-with-realm')
         self.assertEqual(response.status_code, 401)
         self.assertTrue('WWW-Authenticate' in response.headers)
-        self.assertTrue(re.match(r'^Digest realm="My Realm",nonce="[0-9a-f]+",'
-                                 r'opaque="[0-9a-f]+"$',
+        self.assertTrue(re.match(r'^CustomDigest realm="My Realm",'
+                                 'nonce="[0-9a-f]+",opaque="[0-9a-f]+"$',
                                  response.headers['WWW-Authenticate']))
 
     def test_digest_auth_login_valid(self):
@@ -303,7 +304,8 @@ class HTTPAuthTestCase(unittest.TestCase):
         response = self.client.get(
             '/digest', headers={
                 'Authorization': 'Digest username="john",realm="{0}",'
-                                 'nonce="{1}",uri="/digest_ha1_pw",response="{2}",'
+                                 'nonce="{1}",uri="/digest_ha1_pw",'
+                                 'response="{2}",'
                                  'opaque="{3}"'.format(d['realm'],
                                                        d['nonce'],
                                                        auth_response,
@@ -341,15 +343,16 @@ class HTTPAuthTestCase(unittest.TestCase):
     def test_digest_auth_login_invalid(self):
         response = self.client.get(
             '/digest-with-realm', headers={
-                "Authorization": 'Digest username="susan",realm="My Realm",'
+                "Authorization": 'CustomDigest username="susan",'
+                                 'realm="My Realm",'
                                  'nonce="dcd98b7102dd2f0e8b11d0f600bfb0c093",'
                                  'uri="/digest-with-realm",'
                                  'response="ca306c361a9055b968810067a37fb8cb",'
                                  'opaque="5ccc069c403ebaf9f0171e9517f40e41"'})
         self.assertEqual(response.status_code, 401)
         self.assertTrue('WWW-Authenticate' in response.headers)
-        self.assertTrue(re.match(r'^Digest realm="My Realm",nonce="[0-9a-f]+",'
-                                 r'opaque="[0-9a-f]+"$',
+        self.assertTrue(re.match(r'^CustomDigest realm="My Realm",'
+                                 r'nonce="[0-9a-f]+",opaque="[0-9a-f]+"$',
                                  response.headers['WWW-Authenticate']))
 
     def test_digest_auth_login_invalid2(self):
@@ -395,12 +398,14 @@ class HTTPAuthTestCase(unittest.TestCase):
             return 'some opaque'
 
         verify_nonce_called = []
+
         @self.digest_auth.verify_nonce
         def verify_nonce(provided_nonce):
             verify_nonce_called.append(provided_nonce)
             return True
 
         verify_opaque_called = []
+
         @self.digest_auth.verify_opaque
         def verify_opaque(provided_opaque):
             verify_opaque_called.append(provided_opaque)
@@ -432,9 +437,9 @@ class HTTPAuthTestCase(unittest.TestCase):
                                                        d['opaque'])})
         self.assertEqual(response.data, b'digest_auth:john')
         self.assertEqual(verify_nonce_called, ['not a good nonce'],
-            "Should have verified the nonce.")
+                         "Should have verified the nonce.")
         self.assertEqual(verify_opaque_called, ['some opaque'],
-            "Should have verified the opaque.")
+                         "Should have verified the opaque.")
 
 
 def suite():

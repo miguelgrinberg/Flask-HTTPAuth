@@ -15,14 +15,15 @@ from flask import request, make_response, session
 
 
 class HTTPAuth(object):
-    def __init__(self):
+    def __init__(self, scheme=None, realm=None):
         def default_get_password(username):
             return None
 
         def default_auth_error():
             return "Unauthorized Access"
 
-        self.realm = "Authentication Required"
+        self.scheme = scheme
+        self.realm = realm or "Authentication Required"
         self.get_password(default_get_password)
         self.error_handler(default_auth_error)
 
@@ -68,8 +69,8 @@ class HTTPAuth(object):
 
 
 class HTTPBasicAuth(HTTPAuth):
-    def __init__(self):
-        super(HTTPBasicAuth, self).__init__()
+    def __init__(self, scheme=None, realm=None):
+        super(HTTPBasicAuth, self).__init__(scheme, realm)
         self.hash_password(None)
         self.verify_password(None)
 
@@ -82,7 +83,7 @@ class HTTPBasicAuth(HTTPAuth):
         return f
 
     def authenticate_header(self):
-        return 'Basic realm="{0}"'.format(self.realm)
+        return '{0} realm="{1}"'.format(self.scheme or 'Basic', self.realm)
 
     def authenticate(self, auth, stored_password):
         if auth:
@@ -105,8 +106,8 @@ class HTTPBasicAuth(HTTPAuth):
 
 
 class HTTPDigestAuth(HTTPAuth):
-    def __init__(self, use_ha1_pw = False):
-        super(HTTPDigestAuth, self).__init__()
+    def __init__(self, scheme=None, realm=None, use_ha1_pw=False):
+        super(HTTPDigestAuth, self).__init__(scheme, realm)
         self.use_ha1_pw = use_ha1_pw
         self.random = SystemRandom()
         try:
@@ -130,7 +131,7 @@ class HTTPDigestAuth(HTTPAuth):
 
         def default_verify_opaque(opaque):
             return opaque == session.get("auth_opaque")
-        
+
         self.generate_nonce(default_generate_nonce)
         self.generate_opaque(default_generate_opaque)
         self.verify_nonce(default_verify_nonce)
@@ -166,8 +167,9 @@ class HTTPDigestAuth(HTTPAuth):
     def authenticate_header(self):
         session["auth_nonce"] = self.get_nonce()
         session["auth_opaque"] = self.get_opaque()
-        return 'Digest realm="{0}",nonce="{1}",opaque="{2}"'.format(
-            self.realm, session["auth_nonce"], session["auth_opaque"])
+        return '{0} realm="{1}",nonce="{2}",opaque="{3}"'.format(
+            self.scheme or 'Digest', self.realm, session["auth_nonce"],
+            session["auth_opaque"])
 
     def authenticate(self, auth, stored_password_or_ha1):
         if not auth or not auth.username or not auth.realm or not auth.uri \
