@@ -5,6 +5,13 @@ Flask-HTTPAuth
 
 Simple extension that provides Basic and Digest HTTP authentication for Flask routes.
 
+Installation
+------------
+The easiest way to install this is through pip.
+```
+pip install Flask-HTTPAuth
+```
+
 Basic authentication example
 ----------------------------
 
