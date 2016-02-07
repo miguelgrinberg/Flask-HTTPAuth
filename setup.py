@@ -9,7 +9,7 @@ from setuptools import setup
 
 setup(
     name='Flask-HTTPAuth',
-    version='2.7.0',
+    version='2.7.1',
     url='http://github.com/miguelgrinberg/flask-httpauth/',
     license='MIT',
     author='Miguel Grinberg',
