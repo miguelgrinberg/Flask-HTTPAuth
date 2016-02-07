@@ -165,11 +165,11 @@ class HTTPDigestAuth(HTTPAuth):
         return md5(a1).hexdigest()
 
     def authenticate_header(self):
-        session["auth_nonce"] = self.get_nonce()
-        session["auth_opaque"] = self.get_opaque()
+        nonce = self.get_nonce()
+        opaque = self.get_opaque()
         return '{0} realm="{1}",nonce="{2}",opaque="{3}"'.format(
-            self.scheme or 'Digest', self.realm, session["auth_nonce"],
-            session["auth_opaque"])
+            self.scheme or 'Digest', self.realm, nonce,
+            opaque)
 
     def authenticate(self, auth, stored_password_or_ha1):
         if not auth or not auth.username or not auth.realm or not auth.uri \
