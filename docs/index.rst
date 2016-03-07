@@ -6,7 +6,7 @@
 Welcome to Flask-HTTPAuth's documentation!
 ==========================================
 
-**Flask-HTTPAuth** is a simple extension that provides Basic and Digest HTTP authentication for Flask routes.
+**Flask-HTTPAuth** is a simple extension that simplifies the use of HTTP authentication with Flask routes.
 
 Basic authentication example
 ----------------------------
@@ -123,6 +123,42 @@ As an alternative to using server-side sessions, an application can implement it
 
 For information of what the ``nonce`` and ``opaque`` values are and how they are used in digest authentication, consult `RFC 2617 <http://tools.ietf.org/html/rfc2617#section-3.2.1>`_.
 
+Custom Authentication Scheme Example
+------------------------------------
+
+The following example application uses a custom HTTP authentication scheme to protect route ``'/'`` with a token::
+
+    from flask import Flask, g
+    from flask_httpauth import HTTPTokenAuth
+
+    app = Flask(__name__)
+    auth = HTTPTokenAuth(scheme='Token')
+
+    tokens = {
+        "secret-token-1": "john",
+        "secret-token-2": "susan"
+    }
+
+    @auth.validate_token
+    def validate_token(token):
+        if token in tokens:
+            g.current_user = tokens[token]
+            return True
+        return False
+
+    @app.route('/')
+    @auth.login_required
+    def index():
+        return "Hello, %s!" % g.current_user
+
+    if __name__ == '__main__':
+        app.run()
+
+The ``HTTPTokenAuth`` is a generic authentication handler that can be used with non-standard authentication schemes, with the scheme name given as an argument in the constructor. In the above example, the ``WWW-Authenticate`` header provided by the server will use ``Token`` as scheme::
+
+    WWW-Authenticate: Token realm="Authentication Required"
+
+The ``verify_token`` callback receives the authentication credentials provided by the client on the ``Authorization`` header. This can be a simple token, or can contain multiple arguments, which the function will have to parse and extract from the string.
 
 Deployment Considerations
 -------------------------
@@ -136,7 +172,7 @@ API Documentation
 
 .. class:: HTTPBasicAuth
 
-  This class that handles HTTP Basic authentication for Flask routes.
+  This class handles HTTP Basic authentication for Flask routes.
 
   .. method:: __init__(scheme=None, realm=None)
 
@@ -212,7 +248,7 @@ API Documentation
 
 .. class:: flask_httpauth.HTTPDigestAuth
 
-  This class that handles HTTP Digest authentication for Flask routes. The ``SECRET_KEY`` configuration must be set in the Flask application to enable the session to work. Flask by default stores user sessions in the client as secure cookies, so the client must be able to handle cookies. To support clients that are not web browsers or that cannot handle cookies a `session interface <http://flask.pocoo.org/docs/api/#flask.Flask.session_interface>`_ that writes sessions in the server must be used.
+  This class handles HTTP Digest authentication for Flask routes. The ``SECRET_KEY`` configuration must be set in the Flask application to enable the session to work. Flask by default stores user sessions in the client as secure cookies, so the client must be able to handle cookies. To support clients that are not web browsers or that cannot handle cookies a `session interface <http://flask.pocoo.org/docs/api/#flask.Flask.session_interface>`_ that writes sessions in the server must be used.
 
   .. method:: __init__(self, scheme=None, realm=None, use_ha1_pw=False)
 
@@ -273,5 +309,36 @@ API Documentation
     See basic authentication for documentation and examples.
 
   .. method:: username()
+
+    See basic authentication for documentation and examples.
+
+.. class:: HTTPTokenAuth
+
+  This class handles HTTP authentication with custom schemes for Flask routes.
+
+  .. method:: __init__(scheme, realm=None)
+
+    Create a token authentication object.
+
+    The ``scheme`` argument must be provided to be used in the ``WWW-Authenticate`` response.
+
+    The ``realm`` argument can be used to provide an application defined realm with the ``WWW-Authenticate`` header.
+
+  .. method:: verify_token(verify_token_callback)
+
+    This callback function will be called by the framework to verify that the credentials sent by the client with the ``Authorization`` header are valid. The callback function takes one argument, the username and the password and must return ``True`` or ``False``. Example usage::
+
+      @auth.verify_token
+      def verify_token(token):
+          g.current_user = User.query.filter_by(token=token).first()
+          return g.current_user is not None
+
+    Note that a ``verify_token`` callback is required when using this class.
+
+  .. method:: error_handler(error_callback)
+
+    See basic authentication for documentation and examples.
+
+  .. method:: login_required(view_function_callback)
 
     See basic authentication for documentation and examples.
