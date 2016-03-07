@@ -12,18 +12,22 @@ from functools import wraps
 from hashlib import md5
 from random import Random, SystemRandom
 from flask import request, make_response, session
+from werkzeug.datastructures import Authorization
 
 
 class HTTPAuth(object):
     def __init__(self, scheme=None, realm=None):
+        self.scheme = scheme
+        self.realm = realm or "Authentication Required"
+        self.get_password_callback = None
+        self.auth_error_callback = None
+
         def default_get_password(username):
             return None
 
         def default_auth_error():
             return "Unauthorized Access"
 
-        self.scheme = scheme
-        self.realm = realm or "Authentication Required"
         self.get_password(default_get_password)
         self.error_handler(default_auth_error)
 
@@ -35,8 +39,9 @@ class HTTPAuth(object):
         @wraps(f)
         def decorated(*args, **kwargs):
             res = f(*args, **kwargs)
-            if type(res) == str:
-                res = make_response(res)
+            res = make_response(res)
+            if res.status_code == 200:
+                # if user didn't set status code, use 401
                 res.status_code = 401
             if 'WWW-Authenticate' not in res.headers.keys():
                 res.headers['WWW-Authenticate'] = self.authenticate_header()
@@ -44,16 +49,28 @@ class HTTPAuth(object):
         self.auth_error_callback = decorated
         return decorated
 
+    def authenticate_header(self):
+        return '{0} realm="{1}"'.format(self.scheme, self.realm)
+
     def login_required(self, f):
         @wraps(f)
         def decorated(*args, **kwargs):
             auth = request.authorization
-            # We need to ignore authentication headers for OPTIONS to avoid
-            # unwanted interactions with CORS.
-            # Chrome and Firefox issue a preflight OPTIONS request to check
-            # Access-Control-* headers, and will fail if it returns 401.
-            if request.method != 'OPTIONS':
-                if auth:
+            if auth is None and 'Authorization' in request.headers:
+                # Flask/Werkzeug do not recognize any authentication types
+                # other than Basic or Digest, so here we parse the header by
+                # hand
+                auth_type, token = request.headers['Authorization'].split(
+                    None, 1)
+                auth = Authorization(auth_type, {'token': token})
+            if auth is not None and auth.type.lower() != self.scheme.lower():
+                return self.auth_error_callback()
+            # Flask normally handles OPTIONS requests on its own, but in the
+            # case it is configured to forward those to the application, we
+            # need to ignore authentication headers and let the request through
+            # to avoid unwanted interactions with CORS.
+            if request.method != 'OPTIONS':  # pragma: no cover
+                if auth and auth.username:
                     password = self.get_password_callback(auth.username)
                 else:
                     password = None
@@ -70,9 +87,10 @@ class HTTPAuth(object):
 
 class HTTPBasicAuth(HTTPAuth):
     def __init__(self, scheme=None, realm=None):
-        super(HTTPBasicAuth, self).__init__(scheme, realm)
-        self.hash_password(None)
-        self.verify_password(None)
+        super(HTTPBasicAuth, self).__init__(scheme or 'Basic', realm)
+
+        self.hash_password_callback = None
+        self.verify_password_callback = None
 
     def hash_password(self, f):
         self.hash_password_callback = f
@@ -81,9 +99,6 @@ class HTTPBasicAuth(HTTPAuth):
     def verify_password(self, f):
         self.verify_password_callback = f
         return f
-
-    def authenticate_header(self):
-        return '{0} realm="{1}"'.format(self.scheme or 'Basic', self.realm)
 
     def authenticate(self, auth, stored_password):
         if auth:
@@ -107,13 +122,18 @@ class HTTPBasicAuth(HTTPAuth):
 
 class HTTPDigestAuth(HTTPAuth):
     def __init__(self, scheme=None, realm=None, use_ha1_pw=False):
-        super(HTTPDigestAuth, self).__init__(scheme, realm)
+        super(HTTPDigestAuth, self).__init__(scheme or 'Digest', realm)
         self.use_ha1_pw = use_ha1_pw
         self.random = SystemRandom()
         try:
             self.random.random()
-        except NotImplementedError:
+        except NotImplementedError:  # pragma: no cover
             self.random = Random()
+
+        self.generate_nonce_callback = None
+        self.verify_nonce_callback = None
+        self.generate_opaque_callback = None
+        self.verify_opaque_callback = None
 
         def _generate_random():
             return md5(str(self.random.random()).encode('utf-8')).hexdigest()
@@ -168,7 +188,7 @@ class HTTPDigestAuth(HTTPAuth):
         nonce = self.get_nonce()
         opaque = self.get_opaque()
         return '{0} realm="{1}",nonce="{2}",opaque="{3}"'.format(
-            self.scheme or 'Digest', self.realm, nonce,
+            self.scheme, self.realm, nonce,
             opaque)
 
     def authenticate(self, auth, stored_password_or_ha1):
@@ -190,3 +210,23 @@ class HTTPDigestAuth(HTTPAuth):
         a3 = ha1 + ":" + auth.nonce + ":" + ha2
         response = md5(a3.encode('utf-8')).hexdigest()
         return response == auth.response
+
+
+class HTTPTokenAuth(HTTPAuth):
+    def __init__(self, scheme='Bearer', realm=None):
+        super(HTTPTokenAuth, self).__init__(scheme, realm)
+
+        self.verify_token_callback = None
+
+    def verify_token(self, f):
+        self.verify_token_callback = f
+        return f
+
+    def authenticate(self, auth, stored_password):
+        if auth:
+            token = auth['token']
+        else:
+            token = ""
+        if self.verify_token_callback:
+            return self.verify_token_callback(token)
+        return False

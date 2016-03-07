@@ -23,7 +23,7 @@ setup(
     install_requires=[
         'Flask'
     ],
-    test_suite="test_httpauth",
+    test_suite="tests",
     classifiers=[
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
