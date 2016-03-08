@@ -139,8 +139,8 @@ The following example application uses a custom HTTP authentication scheme to pr
         "secret-token-2": "susan"
     }
 
-    @auth.validate_token
-    def validate_token(token):
+    @auth.verify_token
+    def verify_token(token):
         if token in tokens:
             g.current_user = tokens[token]
             return True
