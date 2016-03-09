@@ -60,9 +60,14 @@ class HTTPAuth(object):
                 # Flask/Werkzeug do not recognize any authentication types
                 # other than Basic or Digest, so here we parse the header by
                 # hand
-                auth_type, token = request.headers['Authorization'].split(
-                    None, 1)
-                auth = Authorization(auth_type, {'token': token})
+                try:
+                    auth_type, token = request.headers['Authorization'].split(
+                        None, 1)
+                    auth = Authorization(auth_type, {'token': token})
+                except ValueError:
+                    # The Authorization header is either empty or has no token
+                    pass
+
             if auth is not None and auth.type.lower() != self.scheme.lower():
                 return self.auth_error_callback()
             # Flask normally handles OPTIONS requests on its own, but in the
