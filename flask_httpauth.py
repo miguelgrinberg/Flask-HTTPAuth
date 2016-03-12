@@ -68,8 +68,12 @@ class HTTPAuth(object):
                     # The Authorization header is either empty or has no token
                     pass
 
+            # if the auth type does not match, we act as if there is no auth
+            # this is better than failing directly, as it allows the callback
+            # to handle special cases, like supporting multiple auth types
             if auth is not None and auth.type.lower() != self.scheme.lower():
-                return self.auth_error_callback()
+                auth = None
+
             # Flask normally handles OPTIONS requests on its own, but in the
             # case it is configured to forward those to the application, we
             # need to ignore authentication headers and let the request through
