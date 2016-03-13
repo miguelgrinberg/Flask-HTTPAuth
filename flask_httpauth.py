@@ -239,3 +239,24 @@ class HTTPTokenAuth(HTTPAuth):
         if self.verify_token_callback:
             return self.verify_token_callback(token)
         return False
+
+
+class MultiAuth(object):
+    def __init__(self, main_auth, *args):
+        self.main_auth = main_auth
+        self.additional_auth = args
+
+    def login_required(self, f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            selected_auth = None
+            if 'Authorization' in request.headers:
+                scheme, creds = request.headers['Authorization'].split(None, 1)
+                for auth in self.additional_auth:
+                    if auth.scheme == scheme:
+                        selected_auth = auth
+                        break
+            if selected_auth is None:
+                selected_auth = self.main_auth
+            return selected_auth.login_required(f)()
+        return decorated

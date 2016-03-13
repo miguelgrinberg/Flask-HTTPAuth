@@ -61,6 +61,8 @@ For the most degree of flexibility the `get_password` and `hash_password` callba
     def verify_pw(username, password):
         return call_custom_verify_function(username, password)
 
+In the examples directory you can find an example called `basic_auth.py` that shows how a `verify_password` callback can be used to securely work with hashed passwords.
+
 Digest authentication example
 -----------------------------
 
@@ -123,8 +125,8 @@ As an alternative to using server-side sessions, an application can implement it
 
 For information of what the ``nonce`` and ``opaque`` values are and how they are used in digest authentication, consult `RFC 2617 <http://tools.ietf.org/html/rfc2617#section-3.2.1>`_.
 
-Custom Authentication Scheme Example
-------------------------------------
+Token Authentication Scheme Example
+-----------------------------------
 
 The following example application uses a custom HTTP authentication scheme to protect route ``'/'`` with a token::
 
@@ -159,6 +161,15 @@ The ``HTTPTokenAuth`` is a generic authentication handler that can be used with 
     WWW-Authenticate: Token realm="Authentication Required"
 
 The ``verify_token`` callback receives the authentication credentials provided by the client on the ``Authorization`` header. This can be a simple token, or can contain multiple arguments, which the function will have to parse and extract from the string.
+
+In the examples directory you can find a complete example that uses JWT tokens.
+
+Using Multiple Authentication Schemes
+-------------------------------------
+
+Applications sometimes need to support a combination of authentication methods. For example, a web application could be authenticating by sending client id and secret over basic authentication, while third party API clients use a JWT bearer token. The `MultiAuth` class allows you to protect a route with more than one authentication object. To grant access to the endpoint, one of the authentication methods must validate.
+
+In the examples directory you can find a complete example that uses basic and token authentication.
 
 Deployment Considerations
 -------------------------
