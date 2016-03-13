@@ -72,6 +72,14 @@ class HTTPAuthTestCase(unittest.TestCase):
         self.assertEqual(response.headers['WWW-Authenticate'],
                          'MyToken realm="Foo"')
 
+    def test_token_auth_login_invalid_header(self):
+        response = self.client.get(
+            '/protected', headers={'Authorization': 'this-is-a-bad-header'})
+        self.assertEqual(response.status_code, 401)
+        self.assertTrue('WWW-Authenticate' in response.headers)
+        self.assertEqual(response.headers['WWW-Authenticate'],
+                         'MyToken realm="Foo"')
+
     def test_token_auth_login_invalid_no_callback(self):
         token_auth2 = HTTPTokenAuth('Token', realm='foo')
 
