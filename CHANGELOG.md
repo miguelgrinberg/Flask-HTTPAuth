@@ -2,7 +2,11 @@
 
 ## Unreleased
 
+## Release 3.1.0 - 2016-03-13
+
+- Added `MultiAuth` class, to allow the combination of multiple authentication methods.
 - Added additional test for token authentication
+- Added a few examples
 
 ## Release 3.0.2 - 2016-03-11
 
