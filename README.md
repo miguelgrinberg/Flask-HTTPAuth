@@ -80,4 +80,4 @@ Resources
 
 - [Documentation](http://pythonhosted.org/Flask-HTTPAuth)
 - [pypi](https://pypi.python.org/pypi/Flask-HTTPAuth)
-
+- [Change log](https://github.com/miguelgrinberg/Flask-HTTPAuth/blob/master/CHANGELOG.md)
