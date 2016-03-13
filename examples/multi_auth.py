@@ -22,10 +22,6 @@ token_auth = HTTPTokenAuth('Bearer')
 multi_auth = MultiAuth(basic_auth, token_auth)
 
 
-def get_jwt(username, expires_in=3600):
-    return jwt.dumps({'username': username})
-
-
 users = {
     "john": generate_password_hash("hello"),
     "susan": generate_password_hash("bye")
