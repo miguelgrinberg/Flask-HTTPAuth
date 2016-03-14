@@ -8,12 +8,12 @@ When this application starts, a token is generated for each of the two users.
 To gain access, you can use a command line HTTP client such as curl, passing
 one of the tokens:
 
-    curl -X GET -H "Authorization: Bearer <insert-jwt-token-here>" http://localhost:5000/
+    curl -X GET -H "Authorization: Bearer <jwt-token>" http://localhost:5000/
 
 The response should include the username, which is obtained from the JWT token.
 """
 from flask import Flask, g
-from flask_httpauth import HTTPBasicAuth, HTTPTokenAuth, MultiAuth
+from flask_httpauth import HTTPTokenAuth
 from itsdangerous import TimedJSONWebSignatureSerializer as JWT
 
 
@@ -22,10 +22,6 @@ app.config['SECRET_KEY'] = 'top secret!'
 jwt = JWT(app.config['SECRET_KEY'], expires_in=3600)
 
 auth = HTTPTokenAuth('Bearer')
-
-
-def get_jwt(username, expires_in=3600):
-    return jwt.dumps({'username': username})
 
 
 users = ['john', 'susan']
