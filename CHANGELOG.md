@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Release 3.1.1 - 2016-03-24
+
+- `MultiAuth` class did not pass parameters to decorated function. ([#35](https://github.com/miguelgrinberg/Flask-HTTPAuth/issues/35))
+
 ## Release 3.1.0 - 2016-03-13
 
 - Added `MultiAuth` class, to allow the combination of multiple authentication methods.
