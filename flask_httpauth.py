@@ -126,7 +126,8 @@ class HTTPBasicAuth(HTTPAuth):
             except TypeError:
                 client_password = self.hash_password_callback(username,
                                                               client_password)
-        return client_password == stored_password
+        return client_password is not None and \
+            client_password == stored_password
 
 
 class HTTPDigestAuth(HTTPAuth):
