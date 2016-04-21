@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Release 3.1.2 - 2016-04-20
+
+- Make password check more robust.
+
 ## Release 3.1.1 - 2016-03-24
 
 - `MultiAuth` class did not pass parameters to decorated function. ([#35](https://github.com/miguelgrinberg/Flask-HTTPAuth/issues/35))
