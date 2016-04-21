@@ -84,7 +84,7 @@ class HTTPAuth(object):
                 else:
                     password = None
                 if not self.authenticate(auth, password):
-                    #Clear TCP receive buffer of any pending data
+                    # Clear TCP receive buffer of any pending data
                     request.data
                     return self.auth_error_callback()
 
