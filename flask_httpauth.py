@@ -5,7 +5,7 @@ flask_httpauth
 This module provides Basic and Digest HTTP authentication for Flask routes.
 
 :copyright: (C) 2014 by Miguel Grinberg.
-:license:   BSD, see LICENSE for more details.
+:license:   MIT, see LICENSE for more details.
 """
 
 from functools import wraps
