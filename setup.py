@@ -4,12 +4,16 @@ Flask-HTTPAuth
 
 Basic and Digest HTTP authentication for Flask routes.
 """
+import re
 from setuptools import setup
 
+with open('flask_httpauth.py', 'r') as f:
+    version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
+                        f.read(), re.MULTILINE).group(1)
 
 setup(
     name='Flask-HTTPAuth',
-    version='3.2.0',
+    version=version,
     url='http://github.com/miguelgrinberg/flask-httpauth/',
     license='MIT',
     author='Miguel Grinberg',

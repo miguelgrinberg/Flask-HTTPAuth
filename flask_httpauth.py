@@ -14,6 +14,8 @@ from random import Random, SystemRandom
 from flask import request, make_response, session
 from werkzeug.datastructures import Authorization
 
+__version__ = '3.2.0'
+
 
 class HTTPAuth(object):
     def __init__(self, scheme=None, realm=None):
