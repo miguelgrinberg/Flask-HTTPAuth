@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## Release 3.2.1 - 2016-09-04
+
+- Added `__version__` to top-level package
+- Added readme and license files to package
+
+## Release 3.2.0 - 2016-08-20
+
+- Changed license to MIT
+- Fix TCP Connection reset by peer error ([#39](https://github.com/miguelgrinberg/Flask-HTTPAuth/pull/39))
+
 ## Release 3.1.2 - 2016-04-20
 
 - Make password check more robust.
