@@ -52,7 +52,7 @@ If the hashing algorithm requires the username to be known then the callback can
 
     @auth.hash_password
     def hash_pw(username, password):
-        get_salt(username)
+        salt = get_salt(username)
         return hash(password, salt)
 
 For the most degree of flexibility the `get_password` and `hash_password` callbacks can be replaced with `verify_password`::
