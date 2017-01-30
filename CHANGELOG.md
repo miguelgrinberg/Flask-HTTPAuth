@@ -1,6 +1,8 @@
 # Flask-HTTPAuth Change Log
 
-## Unreleased
+## Release 3.2.2 - 2017-01-29
+
+- Validate authorization header in multi auth ([#51](https://github.com/miguelgrinberg/Flask-HTTPAuth/issues/51))
 
 ## Release 3.2.1 - 2016-09-04
 
