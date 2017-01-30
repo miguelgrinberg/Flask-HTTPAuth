@@ -81,3 +81,8 @@ class HTTPAuthTestCase(unittest.TestCase):
         self.assertTrue('WWW-Authenticate' in response.headers)
         self.assertEqual(response.headers['WWW-Authenticate'],
                          'Basic realm="Authentication Required"')
+
+    def test_multi_malformed_header(self):
+        response = self.client.get(
+            '/protected', headers={'Authorization': 'token-without-scheme'})
+        self.assertEqual(response.status_code, 401)

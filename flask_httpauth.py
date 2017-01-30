@@ -257,11 +257,17 @@ class MultiAuth(object):
         def decorated(*args, **kwargs):
             selected_auth = None
             if 'Authorization' in request.headers:
-                scheme, creds = request.headers['Authorization'].split(None, 1)
-                for auth in self.additional_auth:
-                    if auth.scheme == scheme:
-                        selected_auth = auth
-                        break
+                try:
+                    scheme, creds = request.headers['Authorization'].split(
+                        None, 1)
+                except ValueError:
+                    # malformed Authorization header
+                    pass
+                else:
+                    for auth in self.additional_auth:
+                        if auth.scheme == scheme:
+                            selected_auth = auth
+                            break
             if selected_auth is None:
                 selected_auth = self.main_auth
             return selected_auth.login_required(f)(*args, **kwargs)
