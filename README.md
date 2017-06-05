@@ -42,7 +42,7 @@ if __name__ == '__main__':
     app.run()
 ```
 
-Note: See the [documentation](http://pythonhosted.org/Flask-HTTPAuth) for more complex examples that involve password hashing and custom verification callbacks.
+Note: See the [documentation](http://flask-httpauth.readthedocs.io) for more complex examples that involve password hashing and custom verification callbacks.
 
 Digest authentication example
 -----------------------------
@@ -78,6 +78,6 @@ if __name__ == '__main__':
 Resources
 ---------
 
-- [Documentation](http://pythonhosted.org/Flask-HTTPAuth)
+- [Documentation](http://flask-httpauth.readthedocs.io)
 - [pypi](https://pypi.python.org/pypi/Flask-HTTPAuth)
 - [Change log](https://github.com/miguelgrinberg/Flask-HTTPAuth/blob/master/CHANGELOG.md)
