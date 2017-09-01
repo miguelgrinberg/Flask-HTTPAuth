@@ -241,7 +241,7 @@ API Documentation
 
   .. method:: login_required(view_function_callback)
         
-    This callback function will be called when authentication is succesful. This will typically be a Flask view function. Example::
+    This callback function will be called when authentication is successful. This will typically be a Flask view function. Example::
 
       @app.route('/private')
       @auth.login_required
