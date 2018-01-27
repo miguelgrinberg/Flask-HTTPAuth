@@ -8,13 +8,35 @@ This module provides Basic and Digest HTTP authentication for Flask routes.
 :license:   MIT, see LICENSE for more details.
 """
 
+from enum import Enum
 from functools import wraps
 from hashlib import md5
+from inspect import signature
 from random import Random, SystemRandom
 from flask import request, make_response, session
 from werkzeug.datastructures import Authorization
 
 __version__ = '3.2.3'
+
+
+class AuthenticationState(Enum):
+    # No faults were found by this library
+    OK = 0
+    NO_AUTH = 100 # Authentication header was not sent
+    # General errors/states
+    EMPTY = 101
+    INCOMPLETE = 102
+    WRONG_SCHEME = 103
+    NO_AUTH_DATA = 104 # The scheme is there and is correct but there's no authentication data
+    # Digest-specific errors/states
+    # So far, means opaque or nonce was wrong
+    INVALID_DIGEST_DATA = 300
+    # external-specific errors/states
+    CALLBACK_REFUSED = 900
+
+class HTTPInvalidNonceOrOpaque(Exception):
+    def __init__(self, scheme=None, realm=None):
+        super(HTTPInvalidNonceOrOpaque, self).__init__("Nonce or opaque are wrong")
 
 
 class HTTPAuth(object):
@@ -27,7 +49,7 @@ class HTTPAuth(object):
         def default_get_password(username):
             return None
 
-        def default_auth_error():
+        def default_auth_error(scheme, auth_state):
             return "Unauthorized Access"
 
         self.get_password(default_get_password)
@@ -38,9 +60,23 @@ class HTTPAuth(object):
         return f
 
     def error_handler(self, f):
+        def remove_karg(parent_filter, name):
+            def remover(**kwargs):
+                kwargs = parent_filter(**kwargs)
+                kwargs.pop(name, None)
+                print("kwargs", kwargs)
+                return kwargs
+            return remover
+        filter_kargs = lambda **kwargs: kwargs
+        
+        f_params = signature(f).parameters
+        for karg in ['scheme', 'auth_state']:
+            if not karg in f_params:
+                filter_kargs = remove_karg(filter_kargs, karg)
+        
         @wraps(f)
         def decorated(*args, **kwargs):
-            res = f(*args, **kwargs)
+            res = f(*args, **filter_kargs(**kwargs))
             res = make_response(res)
             if res.status_code == 200:
                 # if user didn't set status code, use 401
@@ -57,7 +93,10 @@ class HTTPAuth(object):
     def login_required(self, f):
         @wraps(f)
         def decorated(*args, **kwargs):
+            # By default, the authentication is as expected
+            auth_status = AuthenticationState.OK
             auth = request.authorization
+            auth_type = None
             if auth is None and 'Authorization' in request.headers:
                 # Flask/Werkzeug do not recognize any authentication types
                 # other than Basic or Digest, so here we parse the header by
@@ -65,15 +104,26 @@ class HTTPAuth(object):
                 try:
                     auth_type, token = request.headers['Authorization'].split(
                         None, 1)
-                    auth = Authorization(auth_type, {'token': token})
+                    if auth_type.strip().lower() == self.scheme.lower():
+                        auth = Authorization(auth_type, {'token': token})
+                    else:
+                        auth_status = AuthenticationState.WRONG_SCHEME
                 except ValueError:
                     # The Authorization header is either empty or has no token
-                    pass
+                    auth_type = request.headers['Authorization']
+                    if len(auth_type) == 0:
+                        auth_status = AuthenticationState.EMPTY
+                    elif auth_type.strip().lower() == self.scheme.lower():
+                        auth_status = AuthenticationState.NO_AUTH_DATA
+                    else:
+                        auth_status = AuthenticationState.WRONG_SCHEME
+            else:
+                auth_status = AuthenticationState.NO_AUTH
 
             # if the auth type does not match, we act as if there is no auth
             # this is better than failing directly, as it allows the callback
             # to handle special cases, like supporting multiple auth types
-            if auth is not None and auth.type.lower() != self.scheme.lower():
+            if auth is not None and auth_status == AuthenticationState.WRONG_SCHEME:
                 auth = None
 
             # Flask normally handles OPTIONS requests on its own, but in the
@@ -85,10 +135,18 @@ class HTTPAuth(object):
                     password = self.get_password_callback(auth.username)
                 else:
                     password = None
-                if not self.authenticate(auth, password):
-                    # Clear TCP receive buffer of any pending data
-                    request.data
-                    return self.auth_error_callback()
+                
+                authenticated = False
+                try:
+                    authenticated = self.authenticate(auth, password)
+                except HTTPInvalidNonceOrOpaque:
+                    auth_status = AuthenticationState.INVALID_DIGEST_DATA
+                finally:
+                    if not authenticated:
+                        # Clear TCP receive buffer of any pending data
+                        request.data
+                        return self.auth_error_callback(scheme=auth_type, auth_state=auth_status)
+                    
 
             return f(*args, **kwargs)
         return decorated
@@ -213,7 +271,7 @@ class HTTPDigestAuth(HTTPAuth):
             return False
         if not(self.verify_nonce_callback(auth.nonce)) or \
                 not(self.verify_opaque_callback(auth.opaque)):
-            return False
+            raise HTTPInvalidNonceOrOpaque()
         if self.use_ha1_pw:
             ha1 = stored_password_or_ha1
         else:
