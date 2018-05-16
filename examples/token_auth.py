@@ -35,7 +35,7 @@ def verify_token(token):
     g.user = None
     try:
         data = jwt.loads(token)
-    except:
+    except:  # noqa: E722
         return False
     if 'username' in data:
         g.user = data['username']
