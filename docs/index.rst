@@ -213,7 +213,7 @@ API Documentation
 
       @auth.hash_password
       def hash_pw(username, password):
-          get_salt(username)
+          salt = get_salt(username)
           return hash(password, salt)
 
   .. method:: verify_password(verify_password_callback)
