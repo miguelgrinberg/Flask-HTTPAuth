@@ -78,6 +78,6 @@ if __name__ == '__main__':
 Resources
 ---------
 
-- [Documentation](http://pythonhosted.org/Flask-HTTPAuth)
-- [pypi](https://pypi.python.org/pypi/Flask-HTTPAuth)
+- [Documentation](http://flask-httpauth.readthedocs.io/en/latest/)
+- [PyPI](https://pypi.python.org/pypi/Flask-HTTPAuth)
 - [Change log](https://github.com/miguelgrinberg/Flask-HTTPAuth/blob/master/CHANGELOG.md)
