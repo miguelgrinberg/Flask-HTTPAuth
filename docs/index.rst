@@ -97,7 +97,7 @@ The following example is similar to the previous one, but HTTP Digest authentica
 Security Concerns with Digest Authentication
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The digest authentication algorihtm requires a *challenge* to be sent to the client for use in encrypting the password for transmission. This challenge needs to be used again when the password is decoded at the server, so the challenge information needs to be stored so that it can be recalled later.
+The digest authentication algorithm requires a *challenge* to be sent to the client for use in encrypting the password for transmission. This challenge needs to be used again when the password is decoded at the server, so the challenge information needs to be stored so that it can be recalled later.
 
 By default, Flask-HTTPAuth stores the challenge data in the Flask session. To make the authentication flow secure when using session storage, it is required that server-side sessions are used instead of the default Flask cookie based sessions, as this ensures that the challenge data is not at risk of being captured as it moves in a cookie between server and client. The Flask-Session and Flask-KVSession extensions are both very good options to implement server-side sessions.
 
@@ -167,7 +167,7 @@ In the examples directory you can find a complete example that uses JWT tokens.
 Using Multiple Authentication Schemes
 -------------------------------------
 
-Applications sometimes need to support a combination of authentication methods. For example, a web application could be authenticating by sending client id and secret over basic authentication, while third party API clients use a JWT bearer token. The `MultiAuth` class allows you to protect a route with more than one authentication object. To grant access to the endpoint, one of the authentication methods must validate.
+Applications sometimes need to support a combination of authentication methods. For example, a web application could be authenticated by sending client id and secret over basic authentication, while third party API clients use a JWT bearer token. The `MultiAuth` class allows you to protect a route with more than one authentication object. To grant access to the endpoint, one of the authentication methods must validate.
 
 In the examples directory you can find a complete example that uses basic and token authentication.
 
