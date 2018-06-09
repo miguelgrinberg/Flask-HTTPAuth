@@ -79,5 +79,5 @@ Resources
 ---------
 
 - [Documentation](http://flask-httpauth.readthedocs.io/en/latest/)
-- [PyPI](https://pypi.python.org/pypi/Flask-HTTPAuth)
+- [PyPI](https://pypi.org/project/Flask-HTTPAuth)
 - [Change log](https://github.com/miguelgrinberg/Flask-HTTPAuth/blob/master/CHANGELOG.md)
