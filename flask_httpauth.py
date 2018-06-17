@@ -54,37 +54,48 @@ class HTTPAuth(object):
     def authenticate_header(self):
         return '{0} realm="{1}"'.format(self.scheme, self.realm)
 
+    def get_auth(self):
+        auth = request.authorization
+        if auth is None and 'Authorization' in request.headers:
+            # Flask/Werkzeug do not recognize any authentication types
+            # other than Basic or Digest, so here we parse the header by
+            # hand
+            try:
+                auth_type, token = request.headers['Authorization'].split(
+                    None, 1)
+                auth = Authorization(auth_type, {'token': token})
+            except ValueError:
+                # The Authorization header is either empty or has no token
+                pass
+
+        # if the auth type does not match, we act as if there is no auth
+        # this is better than failing directly, as it allows the callback
+        # to handle special cases, like supporting multiple auth types
+        if auth is not None and auth.type.lower() != self.scheme.lower():
+            auth = None
+
+        return auth
+
+    def get_auth_password(self, auth):
+        password = None
+
+        if auth and auth.username:
+            password = self.get_password_callback(auth.username)
+
+        return password
+
     def login_required(self, f):
         @wraps(f)
         def decorated(*args, **kwargs):
-            auth = request.authorization
-            if auth is None and 'Authorization' in request.headers:
-                # Flask/Werkzeug do not recognize any authentication types
-                # other than Basic or Digest, so here we parse the header by
-                # hand
-                try:
-                    auth_type, token = request.headers['Authorization'].split(
-                        None, 1)
-                    auth = Authorization(auth_type, {'token': token})
-                except ValueError:
-                    # The Authorization header is either empty or has no token
-                    pass
-
-            # if the auth type does not match, we act as if there is no auth
-            # this is better than failing directly, as it allows the callback
-            # to handle special cases, like supporting multiple auth types
-            if auth is not None and auth.type.lower() != self.scheme.lower():
-                auth = None
+            auth = self.get_auth()
 
             # Flask normally handles OPTIONS requests on its own, but in the
             # case it is configured to forward those to the application, we
             # need to ignore authentication headers and let the request through
             # to avoid unwanted interactions with CORS.
             if request.method != 'OPTIONS':  # pragma: no cover
-                if auth and auth.username:
-                    password = self.get_password_callback(auth.username)
-                else:
-                    password = None
+                password = self.get_auth_password(auth)
+
                 if not self.authenticate(auth, password):
                     # Clear TCP receive buffer of any pending data
                     request.data
