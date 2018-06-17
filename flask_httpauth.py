@@ -76,7 +76,7 @@ class HTTPAuth(object):
 
         return auth
 
-    def get_auth_password(self, auth): 
+    def get_auth_password(self, auth):
         password = None
 
         if auth and auth.username:
