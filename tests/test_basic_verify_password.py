@@ -61,12 +61,11 @@ class HTTPAuthTestCase(unittest.TestCase):
     def test_verify_auth_login_invalid_ajax(self):
         creds = base64.b64encode(b'john:bye').decode('utf-8')
         response = self.client.get(
-            '/basic-verify', 
+            '/basic-verify',
             headers={
                 'Authorization': 'Basic ' + creds,
-                'X-Requested-With' : 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest'
             }
         )
         self.assertEqual(response.status_code, 403)
         self.assertFalse('WWW-Authenticate' in response.headers)
-

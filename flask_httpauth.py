@@ -48,8 +48,9 @@ class HTTPAuth(object):
             # don't ask browser to prompt user if this was an AJAX request
             if (request.headers.get('X-Requested-With', '').lower() !=
                     'xmlhttprequest'):
-                if 'WWW-Authenticate' not in res.headers.keys():
-                    res.headers['WWW-Authenticate']=self.authenticate_header()
+                hdrs = res.headers
+                if 'WWW-Authenticate' not in hdrs.keys():
+                    hdrs['WWW-Authenticate'] = self.authenticate_header()
             return res
         self.auth_error_callback = decorated
         return decorated
