@@ -45,8 +45,11 @@ class HTTPAuth(object):
             if res.status_code == 200:
                 # if user didn't set status code, use 401
                 res.status_code = 401
-            if 'WWW-Authenticate' not in res.headers.keys():
-                res.headers['WWW-Authenticate'] = self.authenticate_header()
+            # don't ask browser to prompt user if this was an AJAX request
+            if (request.headers.get('X-Requested-With', '').lower() != 
+                'xmlhttprequest') :
+                if 'WWW-Authenticate' not in res.headers.keys():
+                    res.headers['WWW-Authenticate'] = self.authenticate_header()
             return res
         self.auth_error_callback = decorated
         return decorated
