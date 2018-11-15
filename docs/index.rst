@@ -327,11 +327,11 @@ API Documentation
 
   This class handles HTTP authentication with custom schemes for Flask routes.
 
-  .. method:: __init__(scheme, realm=None)
+  .. method:: __init__(scheme='Bearer', realm=None)
 
     Create a token authentication object.
 
-    The ``scheme`` argument must be provided to be used in the ``WWW-Authenticate`` response.
+    The ``scheme`` argument can be use to specify the scheme to be used in the ``WWW-Authenticate`` response.
 
     The ``realm`` argument can be used to provide an application defined realm with the ``WWW-Authenticate`` header.
 
