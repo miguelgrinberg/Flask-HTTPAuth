@@ -44,7 +44,7 @@ If the passwords are stored hashed in the user database then an additional callb
 
     @auth.hash_password
     def hash_pw(password):
-        return md5(password).hexdigest()
+        return md5(password.encode('utf-8')).hexdigest()
 
 When the ``hash_password`` callback is provided access will be granted when ``get_password(username) == hash_password(password)``.
 
