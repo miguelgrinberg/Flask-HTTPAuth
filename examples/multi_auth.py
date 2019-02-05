@@ -5,17 +5,17 @@ This example demonstrates how to combine two authentication methods using the
 "MultiAuth" class.
 
 The root URL for this application can be accessed via basic auth, providing
-username and password, or via token auth, providing a bearer JWT token.
+username and password, or via token auth, providing a bearer JWS token.
 """
 from flask import Flask, g
 from flask_httpauth import HTTPBasicAuth, HTTPTokenAuth, MultiAuth
 from werkzeug.security import generate_password_hash, check_password_hash
-from itsdangerous import TimedJSONWebSignatureSerializer as JWT
+from itsdangerous import TimedJSONWebSignatureSerializer as JWS
 
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'top secret!'
-jwt = JWT(app.config['SECRET_KEY'], expires_in=3600)
+jws = JWS(app.config['SECRET_KEY'], expires_in=3600)
 
 basic_auth = HTTPBasicAuth()
 token_auth = HTTPTokenAuth('Bearer')
@@ -28,7 +28,7 @@ users = {
 }
 
 for user in users.keys():
-    token = jwt.dumps({'username': user})
+    token = jws.dumps({'username': user})
     print('*** token for {}: {}\n'.format(user, token))
 
 
@@ -46,7 +46,7 @@ def verify_password(username, password):
 def verify_token(token):
     g.user = None
     try:
-        data = jwt.loads(token)
+        data = jws.loads(token)
     except:  # noqa: E722
         return False
     if 'username' in data:
