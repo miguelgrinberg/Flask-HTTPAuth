@@ -162,12 +162,17 @@ The ``HTTPTokenAuth`` is a generic authentication handler that can be used with 
 
 The ``verify_token`` callback receives the authentication credentials provided by the client on the ``Authorization`` header. This can be a simple token, or can contain multiple arguments, which the function will have to parse and extract from the string.
 
-In the examples directory you can find a complete example that uses JWT tokens.
+In the examples directory you can find a complete example that uses
+JWS tokens.  JWS tokens are similar to JWT tokens.  However using JWT
+tokens would require an external dependency to handle JWT.
 
 Using Multiple Authentication Schemes
 -------------------------------------
 
-Applications sometimes need to support a combination of authentication methods. For example, a web application could be authenticated by sending client id and secret over basic authentication, while third party API clients use a JWT bearer token. The `MultiAuth` class allows you to protect a route with more than one authentication object. To grant access to the endpoint, one of the authentication methods must validate.
+Applications sometimes need to support a combination of authentication
+methods. For example, a web application could be authenticated by
+sending client id and secret over basic authentication, while third
+party API clients use a JWS or JWT bearer token. The `MultiAuth` class allows you to protect a route with more than one authentication object. To grant access to the endpoint, one of the authentication methods must validate.
 
 In the examples directory you can find a complete example that uses basic and token authentication.
 

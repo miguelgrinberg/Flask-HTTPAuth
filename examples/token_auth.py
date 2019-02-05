@@ -8,7 +8,7 @@ When this application starts, a token is generated for each of the two users.
 To gain access, you can use a command line HTTP client such as curl, passing
 one of the tokens:
 
-    curl -X GET -H "Authorization: Bearer <jwt-token>" http://localhost:5000/
+    curl -X GET -H "Authorization: Bearer <jws-token>" http://localhost:5000/
 
 The response should include the username, which is obtained from the token.
 """
