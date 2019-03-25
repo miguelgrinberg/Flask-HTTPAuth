@@ -38,7 +38,7 @@ The following example application uses HTTP Basic authentication to protect rout
     if __name__ == '__main__':
         app.run()
         
-The ``get_password`` callback needs to return the password associated with the username given as argument. Flask-HTTPAuth will allow access only if ``get_password(username) == password``.
+The ``get_password`` callback needs to return the password associated with the username given as argument. Flask-HTTPAuth will allow access only if ``get_password(username) == password``. Note that this requires storing clear text passwords on a server, so in most cases it would be a critical security issue. For high password storing security Flask-HTTPAuth provides ``verify_password`` callback. It allows using hashing algorithms which require their own password verification functions. See the ``examples/basic_auth.py`` directory for basic implementation using ``werkzeug.security.generate_password_hash`` and it's default algorithm: ``pbkdf2:sha256``.
 
 If the passwords are stored hashed in the user database then an additional callback is needed::
 

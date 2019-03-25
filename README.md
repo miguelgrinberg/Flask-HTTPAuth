@@ -42,7 +42,7 @@ if __name__ == '__main__':
     app.run()
 ```
 
-Note: See the [documentation](http://pythonhosted.org/Flask-HTTPAuth) for more complex examples that involve password hashing and custom verification callbacks.
+Important security note: Authentication method showed in this example (using a function decorated with `@auth.get_password`) requires passwords to be stored as a clear text or passwords hashed on client side without a salt. Do not use it in production environment as it usually would be a critical security issue. See the [documentation](http://pythonhosted.org/Flask-HTTPAuth) for more complex examples that involve password hashing and custom verification callbacks.
 
 Digest authentication example
 -----------------------------
