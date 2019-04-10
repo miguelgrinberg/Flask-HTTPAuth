@@ -17,6 +17,18 @@ from werkzeug.datastructures import Authorization
 __version__ = '3.2.4'
 
 
+try:
+    from hmac import compare_digest
+except ImportError:
+    import operator
+
+    # This fallback is not constant-time, but making it constant-time
+    # introduces additional complexity. For full-secure password
+    # comparison, applications should use Python 2 >= 2.7.7 or
+    # Python 3 >= 3.4, or use hashed passwords.
+    compare_digest = operator.eq
+
+
 class HTTPAuth(object):
     def __init__(self, scheme=None, realm=None):
         self.scheme = scheme
@@ -142,8 +154,18 @@ class HTTPBasicAuth(HTTPAuth):
             except TypeError:
                 client_password = self.hash_password_callback(username,
                                                               client_password)
-        return client_password is not None and \
-            client_password == stored_password
+        if stored_password is None or client_password is None:
+            return False
+
+        try:
+            stored_password = stored_password.encode("utf-8")
+        except AttributeError:
+            pass
+        try:
+            client_password = client_password.encode("utf-8")
+        except AttributeError:
+            pass
+        return compare_digest(client_password, stored_password)
 
 
 class HTTPDigestAuth(HTTPAuth):
@@ -169,7 +191,10 @@ class HTTPDigestAuth(HTTPAuth):
             return session["auth_nonce"]
 
         def default_verify_nonce(nonce):
-            return nonce == session.get("auth_nonce")
+            session_nonce = session.get("auth_nonce")
+            if nonce is None or session_nonce is None:
+                return False
+            return compare_digest(nonce, session_nonce)
 
         def default_generate_opaque():
             session["auth_opaque"] = _generate_random()
@@ -235,7 +260,7 @@ class HTTPDigestAuth(HTTPAuth):
         ha2 = md5(a2.encode('utf-8')).hexdigest()
         a3 = ha1 + ":" + auth.nonce + ":" + ha2
         response = md5(a3.encode('utf-8')).hexdigest()
-        return response == auth.response
+        return compare_digest(response, auth.response)
 
 
 class HTTPTokenAuth(HTTPAuth):
