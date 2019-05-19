@@ -13,6 +13,7 @@ from hashlib import md5
 from random import Random, SystemRandom
 from flask import request, make_response, session
 from werkzeug.datastructures import Authorization
+from werkzeug.security import safe_str_cmp
 
 __version__ = '3.2.4'
 
@@ -143,7 +144,8 @@ class HTTPBasicAuth(HTTPAuth):
                 client_password = self.hash_password_callback(username,
                                                               client_password)
         return client_password is not None and \
-            client_password == stored_password
+            stored_password is not None and \
+            safe_str_cmp(client_password, stored_password)
 
 
 class HTTPDigestAuth(HTTPAuth):
@@ -169,14 +171,20 @@ class HTTPDigestAuth(HTTPAuth):
             return session["auth_nonce"]
 
         def default_verify_nonce(nonce):
-            return nonce == session.get("auth_nonce")
+            session_nonce = session.get("auth_nonce")
+            if nonce is None or session_nonce is None:
+                return False
+            return safe_str_cmp(nonce, session_nonce)
 
         def default_generate_opaque():
             session["auth_opaque"] = _generate_random()
             return session["auth_opaque"]
 
         def default_verify_opaque(opaque):
-            return opaque == session.get("auth_opaque")
+            session_opaque = session.get("auth_opaque")
+            if opaque is None or session_opaque is None:
+                return False
+            return safe_str_cmp(opaque, session_opaque)
 
         self.generate_nonce(default_generate_nonce)
         self.generate_opaque(default_generate_opaque)
@@ -235,7 +243,7 @@ class HTTPDigestAuth(HTTPAuth):
         ha2 = md5(a2.encode('utf-8')).hexdigest()
         a3 = ha1 + ":" + auth.nonce + ":" + ha2
         response = md5(a3.encode('utf-8')).hexdigest()
-        return response == auth.response
+        return safe_str_cmp(response, auth.response)
 
 
 class HTTPTokenAuth(HTTPAuth):
