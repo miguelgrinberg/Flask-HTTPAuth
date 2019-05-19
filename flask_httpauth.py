@@ -15,7 +15,7 @@ from flask import request, make_response, session
 from werkzeug.datastructures import Authorization
 from werkzeug.security import safe_str_cmp
 
-__version__ = '3.3.0'
+__version__ = '3.3.1dev'
 
 
 class HTTPAuth(object):
