@@ -8,60 +8,59 @@ Welcome to Flask-HTTPAuth's documentation!
 
 **Flask-HTTPAuth** is a simple extension that simplifies the use of HTTP authentication with Flask routes.
 
-Basic authentication example
-----------------------------
+Basic authentication examples
+-----------------------------
 
 The following example application uses HTTP Basic authentication to protect route ``'/'``::
 
-    from flask import Flask
-    from flask_httpauth import HTTPBasicAuth
-    
-    app = Flask(__name__)
-    auth = HTTPBasicAuth()
-    
-    users = {
-        "john": "hello",
-        "susan": "bye"
-    }
-    
-    @auth.get_password
-    def get_pw(username):
-        if username in users:
-            return users.get(username)
-        return None
-    
-    @app.route('/')
-    @auth.login_required
-    def index():
-        return "Hello, %s!" % auth.username()
-        
-    if __name__ == '__main__':
-        app.run()
-        
-The ``get_password`` callback needs to return the password associated with the username given as argument. Flask-HTTPAuth will allow access only if ``get_password(username) == password``.
+   from flask import Flask
+   from flask_httpauth import HTTPBasicAuth
+   from werkzeug.security import generate_password_hash, check_password_hash
 
-If the passwords are stored hashed in the user database then an additional callback is needed::
+   app = Flask(__name__)
+   auth = HTTPBasicAuth()
+
+   users = {
+       "john": generate_password_hash("hello"),
+       "susan": generate_password_hash("bye")
+   }
+
+   @auth.verify_password
+   def verify_password(username, password):
+       if username in users:
+           return check_password_hash(users.get(username), password)
+       return False
+
+   @app.route('/')
+   @auth.login_required
+   def index():
+       return "Hello, %s!" % auth.username()
+
+   if __name__ == '__main__':
+       app.run()
+    
+The example above uses the `verify_password` callback, which provides the most degree of flexibility, but there are a few alternatives to it.
+
+The ``get_password`` callback needs to return the password associated with the username given as argument. Flask-HTTPAuth will allow access only if ``get_password(username) == password``. Example::
+
+    @auth.get_password
+    def get_password(username):
+        return get_password_for_username(username)  
+
+Using this callback alone is in general not a good idea because it requires passwords to be available in plaintext in the server. In the more likely scenario that the passwords are stored hashed in a user database, then an additional callback is needed to define how to hash a password::
 
     @auth.hash_password
     def hash_pw(password):
-        return md5(password.encode('utf-8')).hexdigest()
+        return hash_password(password)
 
-When the ``hash_password`` callback is provided access will be granted when ``get_password(username) == hash_password(password)``.
+In this example, you have to replace ``hash_password()`` with the specific hashing function used in your application. When the ``hash_password`` callback is provided, access will be granted when ``get_password(username) == hash_password(password)``.
 
 If the hashing algorithm requires the username to be known then the callback can take two arguments instead of one::
 
     @auth.hash_password
     def hash_pw(username, password):
         salt = get_salt(username)
-        return hash(password, salt)
-
-For the most degree of flexibility the `get_password` and `hash_password` callbacks can be replaced with `verify_password`::
-
-    @auth.verify_password
-    def verify_pw(username, password):
-        return call_custom_verify_function(username, password)
-
-In the examples directory you can find an example called `basic_auth.py` that shows how a `verify_password` callback can be used to securely work with hashed passwords.
+        return hash_password(password, salt)
 
 Digest authentication example
 -----------------------------
