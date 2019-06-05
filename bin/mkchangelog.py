@@ -3,7 +3,7 @@ import re
 import sys
 import git
 
-URL = 'https://github.com/miguelgrinberg/flask-socketio'
+URL = 'https://github.com/miguelgrinberg/Flask-HTTPAuth'
 merges = {}
 
 
