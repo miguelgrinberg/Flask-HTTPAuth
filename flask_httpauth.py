@@ -14,6 +14,7 @@ from random import Random, SystemRandom
 from flask import request, make_response, session
 from werkzeug.datastructures import Authorization
 from werkzeug.security import safe_str_cmp
+import base64
 
 __version__ = '3.3.1dev'
 
@@ -125,6 +126,30 @@ class HTTPBasicAuth(HTTPAuth):
     def verify_password(self, f):
         self.verify_password_callback = f
         return f
+
+    def get_auth(self):
+        auth = None
+        if 'Authorization' in request.headers:
+            # Flask/Werkzeug do not recognize any authentication types
+            # other than Basic or Digest, so here we parse the header by
+            # hand
+            try:
+                auth_type, auth_str = request.headers['Authorization'].split(
+                    None, 1)
+                username, password = base64.b64decode(
+                    auth_str).decode().split(':', 1)
+                auth = Authorization(auth_type, {'username': username,
+                                                 'password': password})
+            except ValueError:
+                # The Authorization header is either empty or has no token
+                pass
+
+        # if the auth type does not match, we act as if there is no auth
+        # this is better than failing directly, as it allows the callback
+        # to handle special cases, like supporting multiple auth types
+        if auth is not None and auth.type.lower() != self.scheme.lower():
+            auth = None
+        return auth
 
     def authenticate(self, auth, stored_password):
         if auth:
