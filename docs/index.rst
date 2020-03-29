@@ -159,7 +159,9 @@ The ``HTTPTokenAuth`` is a generic authentication handler that can be used with 
 
     WWW-Authenticate: Token realm="Authentication Required"
 
-The ``verify_token`` callback receives the authentication credentials provided by the client on the ``Authorization`` header. This can be a simple token, or can contain multiple arguments, which the function will have to parse and extract from the string.
+The ``verify_token`` callback receives the authentication credentials provided by the client on the ``Authorization`` header. This can be a simple token, or can contain multiple arguments, which the function will have to parse and extract from the string. Example:
+
+`Authorization: Token <Token Value>` 
 
 In the examples directory you can find a complete example that uses
 JWS tokens.  JWS tokens are similar to JWT tokens.  However using JWT
