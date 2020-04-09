@@ -343,3 +343,8 @@ class HTTPBasicRoleAuth(HTTPRoleAuthMixin, HTTPBasicAuth):
 class HTTPTokenRoleAuth(HTTPRoleAuthMixin, HTTPTokenAuth):
     pass
 
+
+class HTTPDigestRoleAuth(HTTPRoleAuthMixin, HTTPDigestAuth):
+    pass
+
+
