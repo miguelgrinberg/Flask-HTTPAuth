@@ -271,25 +271,29 @@ class MultiAuth(object):
         self.main_auth = main_auth
         self.additional_auth = args
 
+    @property
+    def selected_auth(self):
+        selected_auth = None
+        if 'Authorization' in request.headers:
+            try:
+                scheme, creds = request.headers['Authorization'].split(
+                    None, 1)
+            except ValueError:
+                # malformed Authorization header
+                pass
+            else:
+                for auth in self.additional_auth:
+                    if auth.scheme == scheme:
+                        selected_auth = auth
+                        break
+        if selected_auth is None:
+            selected_auth = self.main_auth
+        return selected_auth
+
     def login_required(self, f):
         @wraps(f)
         def decorated(*args, **kwargs):
-            selected_auth = None
-            if 'Authorization' in request.headers:
-                try:
-                    scheme, creds = request.headers['Authorization'].split(
-                        None, 1)
-                except ValueError:
-                    # malformed Authorization header
-                    pass
-                else:
-                    for auth in self.additional_auth:
-                        if auth.scheme == scheme:
-                            selected_auth = auth
-                            break
-            if selected_auth is None:
-                selected_auth = self.main_auth
-            return selected_auth.login_required(f)(*args, **kwargs)
+            return self.selected_auth.login_required(f)(*args, **kwargs)
         return decorated
 
 
@@ -313,7 +317,7 @@ class HTTPRoleAuthMixin(object):
 
     def login_required(self, func=None, roles=None, use_all=False):
         """ endpoint roles are the roles (str) the user has to have to get access to the (decorated) endpoint """
-        if func:
+        if func:  # in case 'login_required' is used without parentheses
             return super().login_required(func)
 
         def verify(auth, stored_password):
@@ -346,5 +350,25 @@ class HTTPTokenRoleAuth(HTTPRoleAuthMixin, HTTPTokenAuth):
 
 class HTTPDigestRoleAuth(HTTPRoleAuthMixin, HTTPDigestAuth):
     pass
+
+
+class MultiRoleAuth(MultiAuth):
+    def __init__(self, main_auth, *args):
+        for auth in (main_auth, *args):
+            if not isinstance(auth, HTTPRoleAuthMixin):
+                raise TypeError(f"cannot initialize '{self.__class__.__name__}' with '{auth.__class__.__name__}': "
+                                f"because it does not inherit from 'HTTPRoleAuthMixin'")
+        super().__init__(main_auth, *args)
+
+    def login_required(self, func=None, roles=None, use_all=False):
+        if func:
+            return super().login_required(func)
+
+        def decorator(f):
+            @wraps(f)
+            def decorated(*args, **kwargs):
+                return self.selected_auth.login_required(roles=roles, use_all=use_all)(f)(*args, **kwargs)
+            return decorated
+        return decorator
 
 
