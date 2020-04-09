@@ -291,3 +291,55 @@ class MultiAuth(object):
                 selected_auth = self.main_auth
             return selected_auth.login_required(f)(*args, **kwargs)
         return decorated
+
+
+class HTTPRoleAuthMixin(object):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.get_auth_roles_callback = None
+
+    def get_auth_roles(self, f):
+        """ auth roles are the roles corresponding to the user/token in auth """
+        self.get_auth_roles_callback = f
+        return f
+
+    def authorize(self, auth, endpoint_roles, use_all):
+        if not auth:
+            return False
+        auth_roles = self.get_auth_roles_callback(auth)
+        if use_all:
+            return all(role in endpoint_roles for role in auth_roles)
+        return any(role in endpoint_roles for role in auth_roles)
+
+    def login_required(self, func=None, roles=None, use_all=False):
+        """ endpoint roles are the roles (str) the user has to have to get access to the (decorated) endpoint """
+        if func:
+            return super().login_required(func)
+
+        def verify(auth, stored_password):
+            return self.authenticate(auth, stored_password) and self.authorize(auth, roles, use_all)
+
+        def decorator(f):
+            @wraps(f)
+            def decorated(*args, **kwargs):
+                """ basically the login_required decorated but with a check of 'authorize' """
+                auth = self.get_auth()
+                if request.method != 'OPTIONS':  # pragma: no cover
+                    password = self.get_auth_password(auth)
+
+                    if not verify(auth, password):
+                        request.data  # empty the stream
+                        return self.auth_error_callback()
+
+                return f(*args, **kwargs)
+            return decorated
+        return decorator
+
+
+class HTTPBasicRoleAuth(HTTPRoleAuthMixin, HTTPBasicAuth):
+    pass
+
+
+class HTTPTokenRoleAuth(HTTPRoleAuthMixin, HTTPTokenAuth):
+    pass
+
