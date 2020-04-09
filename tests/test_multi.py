@@ -15,11 +15,23 @@ class HTTPAuthTestCase(unittest.TestCase):
 
         @basic_auth.verify_password
         def verify_password(username, password):
-            return username == 'john' and password == 'hello'
+            if username == 'john' and password == 'hello':
+                return 'john'
+
+        @basic_auth.get_user_roles
+        def get_basic_role(username):
+            if username == 'john':
+                return ['foo', 'bar']
 
         @token_auth.verify_token
         def verify_token(token):
             return token == 'this-is-the-token!'
+
+        @token_auth.get_user_roles
+        def get_token_role(auth):
+            if auth['token'] == 'this-is-the-token!':
+                return 'foo'
+            return
 
         @token_auth.error_handler
         def error_handler():
@@ -33,6 +45,11 @@ class HTTPAuthTestCase(unittest.TestCase):
         @multi_auth.login_required
         def auth_route():
             return 'access granted'
+
+        @app.route('/protected-with-role')
+        @multi_auth.login_required(role='foo')
+        def auth_role_route():
+            return 'role access granted'
 
         self.app = app
         self.client = app.test_client()
@@ -86,3 +103,16 @@ class HTTPAuthTestCase(unittest.TestCase):
         response = self.client.get(
             '/protected', headers={'Authorization': 'token-without-scheme'})
         self.assertEqual(response.status_code, 401)
+
+    def test_multi_auth_login_valid_basic_role(self):
+        creds = base64.b64encode(b'john:hello').decode('utf-8')
+        response = self.client.get(
+            '/protected-with-role', headers={'Authorization':
+                                             'Basic ' + creds})
+        self.assertEqual(response.data.decode('utf-8'), 'role access granted')
+
+    def test_multi_auth_login_valid_token_role(self):
+        response = self.client.get(
+            '/protected-with-role', headers={'Authorization':
+                                             'MyToken this-is-the-token!'})
+        self.assertEqual(response.data.decode('utf-8'), 'role access granted')
