@@ -1,14 +1,16 @@
 import unittest
 from flask import Flask
-from flask_httpauth import HTTPTokenAuth
+from flask_httpauth import HTTPTokenAuth, HTTPTokenRoleAuth
 
 
-class HTTPAuthTestCase(unittest.TestCase):
+class BaseHTTPAuthTestCase(object):
+    auth_class = None
+
     def setUp(self):
         app = Flask(__name__)
         app.config['SECRET_KEY'] = 'my secret'
 
-        token_auth = HTTPTokenAuth('MyToken')
+        token_auth = self.auth_class('MyToken')
 
         @token_auth.verify_token
         def verify_token(token):
@@ -95,3 +97,13 @@ class HTTPAuthTestCase(unittest.TestCase):
         self.assertTrue('WWW-Authenticate' in response.headers)
         self.assertEqual(response.headers['WWW-Authenticate'],
                          'Token realm="foo"')
+
+
+class HTTPAuthTestCase(BaseHTTPAuthTestCase, unittest.TestCase):
+    auth_class = HTTPTokenAuth
+
+
+class HTTPRoleAuthTestCase(BaseHTTPAuthTestCase, unittest.TestCase):
+    auth_class = HTTPTokenRoleAuth
+
+
