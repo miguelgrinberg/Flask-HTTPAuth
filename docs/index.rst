@@ -252,10 +252,6 @@ API Documentation
       def private_page():
           return "Only for authorized people!"
 
-  .. method:: login_optional(view_function_callback)
-
-    Works the same way as ``login_required`` but doesn't return an error response on authentication failure since it's only optional.
-
   .. method:: username()
 
     A view function that is protected with this class can access the logged username through this method. Example::
@@ -327,10 +323,6 @@ API Documentation
         
     See basic authentication for documentation and examples.
 
-  .. method:: login_optional(view_function_callback)
-
-    See basic authentication for documentation and examples.
-
   .. method:: username()
 
     See basic authentication for documentation and examples.
@@ -363,9 +355,5 @@ API Documentation
     See basic authentication for documentation and examples.
 
   .. method:: login_required(view_function_callback)
-
-    See basic authentication for documentation and examples.
-
-  .. method:: login_optional(view_function_callback)
 
     See basic authentication for documentation and examples.
