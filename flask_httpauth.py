@@ -23,6 +23,7 @@ class HTTPAuth(object):
         self.scheme = scheme
         self.realm = realm or "Authentication Required"
         self.get_password_callback = None
+        self.get_user_roles_callback = None
         self.auth_error_callback = None
 
         def default_get_password(username):
@@ -36,6 +37,10 @@ class HTTPAuth(object):
 
     def get_password(self, f):
         self.get_password_callback = f
+        return f
+
+    def get_user_roles(self, f):
+        self.get_user_roles_callback = f
         return f
 
     def error_handler(self, f):
@@ -85,25 +90,61 @@ class HTTPAuth(object):
 
         return password
 
-    def login_required(self, f):
-        @wraps(f)
-        def decorated(*args, **kwargs):
-            auth = self.get_auth()
+    def authorize(self, role, user, auth):
+        if role is None:
+            return True
+        if isinstance(role, (list, tuple)):
+            roles = role
+        else:
+            roles = [role]
+        if user is True:
+            user = auth
+        if self.get_user_roles_callback is None:  # pragma: no cover
+            raise ValueError('get_user_roles callback is not defined')
+        user_roles = self.get_user_roles_callback(user)
+        if user_roles is None:
+            user_roles = {}
+        elif not isinstance(user_roles, (list, tuple)):
+            user_roles = {user_roles}
+        else:
+            user_roles = set(user_roles)
+        for role in roles:
+            if isinstance(role, (list, tuple)):
+                role = set(role)
+                if role & user_roles == role:
+                    return True
+            elif role in user_roles:
+                return True
 
-            # Flask normally handles OPTIONS requests on its own, but in the
-            # case it is configured to forward those to the application, we
-            # need to ignore authentication headers and let the request through
-            # to avoid unwanted interactions with CORS.
-            if request.method != 'OPTIONS':  # pragma: no cover
-                password = self.get_auth_password(auth)
+    def login_required(self, f=None, role=None):
+        if f is not None and role is not None:  # pragma: no cover
+            raise ValueError('role is the only supported argument')
 
-                if not self.authenticate(auth, password):
-                    # Clear TCP receive buffer of any pending data
-                    request.data
-                    return self.auth_error_callback()
+        def login_required_internal(f):
+            @wraps(f)
+            def decorated(*args, **kwargs):
+                auth = self.get_auth()
 
-            return f(*args, **kwargs)
-        return decorated
+                # Flask normally handles OPTIONS requests on its own, but in
+                # the case it is configured to forward those to the
+                # application, we need to ignore authentication headers and
+                # let the request through to avoid unwanted interactions with
+                # CORS.
+                if request.method != 'OPTIONS':  # pragma: no cover
+                    password = self.get_auth_password(auth)
+
+                    user = self.authenticate(auth, password)
+                    if not user or not self.authorize(role, user, auth):
+                        # Clear TCP receive buffer of any pending data
+                        request.data
+                        return self.auth_error_callback()
+
+                return f(*args, **kwargs)
+            return decorated
+
+        if f:
+            return login_required_internal(f)
+        return login_required_internal
 
     def username(self):
         if not request.authorization:
@@ -271,23 +312,32 @@ class MultiAuth(object):
         self.main_auth = main_auth
         self.additional_auth = args
 
-    def login_required(self, f):
-        @wraps(f)
-        def decorated(*args, **kwargs):
-            selected_auth = None
-            if 'Authorization' in request.headers:
-                try:
-                    scheme, creds = request.headers['Authorization'].split(
-                        None, 1)
-                except ValueError:
-                    # malformed Authorization header
-                    pass
-                else:
-                    for auth in self.additional_auth:
-                        if auth.scheme == scheme:
-                            selected_auth = auth
-                            break
-            if selected_auth is None:
-                selected_auth = self.main_auth
-            return selected_auth.login_required(f)(*args, **kwargs)
-        return decorated
+    def login_required(self, f=None, role=None):
+        if f is not None and role is not None:  # pragma: no cover
+            raise ValueError('role is the only supported argument')
+
+        def login_required_internal(f):
+            @wraps(f)
+            def decorated(*args, **kwargs):
+                selected_auth = None
+                if 'Authorization' in request.headers:
+                    try:
+                        scheme, creds = request.headers[
+                            'Authorization'].split(None, 1)
+                    except ValueError:
+                        # malformed Authorization header
+                        pass
+                    else:
+                        for auth in self.additional_auth:
+                            if auth.scheme == scheme:
+                                selected_auth = auth
+                                break
+                if selected_auth is None:
+                    selected_auth = self.main_auth
+                return selected_auth.login_required(role=role)(f)(
+                    *args, **kwargs)
+            return decorated
+
+        if f:
+            return login_required_internal(f)
+        return login_required_internal
