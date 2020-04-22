@@ -12,7 +12,8 @@ class HTTPAuthTestCase(unittest.TestCase):
 
         @token_auth.verify_token
         def verify_token(token):
-            return token == 'this-is-the-token!'
+            if token == 'this-is-the-token!':
+                return 'user'
 
         @token_auth.error_handler
         def error_handler():
@@ -25,7 +26,7 @@ class HTTPAuthTestCase(unittest.TestCase):
         @app.route('/protected')
         @token_auth.login_required
         def token_auth_route():
-            return 'token_auth'
+            return 'token_auth:' + token_auth.current_user()
 
         self.app = app
         self.token_auth = token_auth
@@ -47,13 +48,13 @@ class HTTPAuthTestCase(unittest.TestCase):
         response = self.client.get(
             '/protected', headers={'Authorization':
                                    'MyToken this-is-the-token!'})
-        self.assertEqual(response.data.decode('utf-8'), 'token_auth')
+        self.assertEqual(response.data.decode('utf-8'), 'token_auth:user')
 
     def test_token_auth_login_valid_different_case(self):
         response = self.client.get(
             '/protected', headers={'Authorization':
                                    'mytoken this-is-the-token!'})
-        self.assertEqual(response.data.decode('utf-8'), 'token_auth')
+        self.assertEqual(response.data.decode('utf-8'), 'token_auth:user')
 
     def test_token_auth_login_invalid_token(self):
         response = self.client.get(

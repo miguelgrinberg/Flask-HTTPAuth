@@ -5,6 +5,8 @@ from flask_httpauth import HTTPBasicAuth
 
 
 class HTTPAuthTestCase(unittest.TestCase):
+    use_old_style_callback = False
+
     def setUp(self):
         app = Flask(__name__)
         app.config['SECRET_KEY'] = 'my secret'
@@ -13,18 +15,29 @@ class HTTPAuthTestCase(unittest.TestCase):
 
         @basic_verify_auth.verify_password
         def basic_verify_auth_verify_password(username, password):
-            g.anon = False
-            if username == 'john':
-                return password == 'hello'
-            elif username == 'susan':
-                return password == 'bye'
-            elif username == '':
-                g.anon = True
-                return True
-            return False
+            if self.use_old_style_callback:
+                g.anon = False
+                if username == 'john':
+                    return password == 'hello'
+                elif username == 'susan':
+                    return password == 'bye'
+                elif username == '':
+                    g.anon = True
+                    return True
+                return False
+            else:
+                g.anon = False
+                if username == 'john' and password == 'hello':
+                    return 'john'
+                elif username == 'susan' and password == 'bye':
+                    return 'susan'
+                elif username == '':
+                    g.anon = True
+                    return ''
 
         @basic_verify_auth.error_handler
         def error_handler():
+            self.assertIsNone(basic_verify_auth.current_user())
             return 'error', 403  # use a custom error status
 
         @app.route('/')
@@ -34,8 +47,12 @@ class HTTPAuthTestCase(unittest.TestCase):
         @app.route('/basic-verify')
         @basic_verify_auth.login_required
         def basic_verify_auth_route():
-            return 'basic_verify_auth:' + basic_verify_auth.username() + \
-                ' anon:' + str(g.anon)
+            if self.use_old_style_callback:
+                return 'basic_verify_auth:' + basic_verify_auth.username() + \
+                    ' anon:' + str(g.anon)
+            else:
+                return 'basic_verify_auth:' + \
+                    basic_verify_auth.current_user() + ' anon:' + str(g.anon)
 
         self.app = app
         self.basic_verify_auth = basic_verify_auth
@@ -57,3 +74,7 @@ class HTTPAuthTestCase(unittest.TestCase):
             '/basic-verify', headers={'Authorization': 'Basic ' + creds})
         self.assertEqual(response.status_code, 403)
         self.assertTrue('WWW-Authenticate' in response.headers)
+
+
+class HTTPAuthTestCaseOldStyle(HTTPAuthTestCase):
+    use_old_style_callback = True

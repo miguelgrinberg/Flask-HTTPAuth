@@ -11,7 +11,7 @@ This module provides Basic and Digest HTTP authentication for Flask routes.
 from functools import wraps
 from hashlib import md5
 from random import Random, SystemRandom
-from flask import request, make_response, session
+from flask import request, make_response, session, g
 from werkzeug.datastructures import Authorization
 from werkzeug.security import safe_str_cmp
 
@@ -134,11 +134,14 @@ class HTTPAuth(object):
                     password = self.get_auth_password(auth)
 
                     user = self.authenticate(auth, password)
-                    if not user or not self.authorize(role, user, auth):
+                    if user in (False, None) or not self.authorize(
+                            role, user, auth):
                         # Clear TCP receive buffer of any pending data
                         request.data
                         return self.auth_error_callback()
 
+                    g.flask_httpauth_user = user if user is not True \
+                        else auth.username if auth else None
                 return f(*args, **kwargs)
             return decorated
 
@@ -150,6 +153,10 @@ class HTTPAuth(object):
         if not request.authorization:
             return ""
         return request.authorization.username
+
+    def current_user(self):
+        if hasattr(g, 'flask_httpauth_user'):
+            return g.flask_httpauth_user
 
 
 class HTTPBasicAuth(HTTPAuth):
@@ -177,16 +184,16 @@ class HTTPBasicAuth(HTTPAuth):
         if self.verify_password_callback:
             return self.verify_password_callback(username, client_password)
         if not auth:
-            return False
+            return
         if self.hash_password_callback:
             try:
                 client_password = self.hash_password_callback(client_password)
             except TypeError:
                 client_password = self.hash_password_callback(username,
                                                               client_password)
-        return client_password is not None and \
+        return auth.username if client_password is not None and \
             stored_password is not None and \
-            safe_str_cmp(client_password, stored_password)
+            safe_str_cmp(client_password, stored_password) else None
 
 
 class HTTPDigestAuth(HTTPAuth):
@@ -223,7 +230,7 @@ class HTTPDigestAuth(HTTPAuth):
 
         def default_verify_opaque(opaque):
             session_opaque = session.get("auth_opaque")
-            if opaque is None or session_opaque is None:
+            if opaque is None or session_opaque is None:  # pragma: no cover
                 return False
             return safe_str_cmp(opaque, session_opaque)
 
@@ -341,3 +348,7 @@ class MultiAuth(object):
         if f:
             return login_required_internal(f)
         return login_required_internal
+
+    def current_user(self):
+        if hasattr(g, 'flask_httpauth_user'):  # pragma: no cover
+            return g.flask_httpauth_user

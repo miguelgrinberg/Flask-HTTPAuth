@@ -18,6 +18,8 @@ class HTTPAuthTestCase(unittest.TestCase):
                 return password == 'hello'
             elif username == 'susan':
                 return password == 'bye'
+            elif username == 'cindy':
+                return password == 'byebye'
             elif username == '':
                 g.anon = True
                 return True
@@ -30,6 +32,8 @@ class HTTPAuthTestCase(unittest.TestCase):
                 return 'normal'
             elif username == 'susan':
                 return ('normal', 'special')
+            elif username == 'cindy':
+                return None
 
         @roles_auth.error_handler
         def error_handler():
@@ -81,8 +85,15 @@ class HTTPAuthTestCase(unittest.TestCase):
             '/special', headers={'Authorization': 'Basic ' + creds})
         self.assertEqual(response.data, b'special:susan')
 
-    def test_verify_auth_login_invalid_special(self):
+    def test_verify_auth_login_invalid_special_1(self):
         creds = base64.b64encode(b'john:hello').decode('utf-8')
+        response = self.client.get(
+            '/special', headers={'Authorization': 'Basic ' + creds})
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue('WWW-Authenticate' in response.headers)
+
+    def test_verify_auth_login_invalid_special_2(self):
+        creds = base64.b64encode(b'cindy:byebye').decode('utf-8')
         response = self.client.get(
             '/special', headers={'Authorization': 'Basic ' + creds})
         self.assertEqual(response.status_code, 403)

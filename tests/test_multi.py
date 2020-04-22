@@ -44,7 +44,7 @@ class HTTPAuthTestCase(unittest.TestCase):
         @app.route('/protected')
         @multi_auth.login_required
         def auth_route():
-            return 'access granted'
+            return 'access granted:' + str(multi_auth.current_user())
 
         @app.route('/protected-with-role')
         @multi_auth.login_required(role='foo')
@@ -65,7 +65,7 @@ class HTTPAuthTestCase(unittest.TestCase):
         creds = base64.b64encode(b'john:hello').decode('utf-8')
         response = self.client.get(
             '/protected', headers={'Authorization': 'Basic ' + creds})
-        self.assertEqual(response.data.decode('utf-8'), 'access granted')
+        self.assertEqual(response.data.decode('utf-8'), 'access granted:john')
 
     def test_multi_auth_login_invalid_basic(self):
         creds = base64.b64encode(b'john:bye').decode('utf-8')
@@ -80,7 +80,7 @@ class HTTPAuthTestCase(unittest.TestCase):
         response = self.client.get(
             '/protected', headers={'Authorization':
                                    'MyToken this-is-the-token!'})
-        self.assertEqual(response.data.decode('utf-8'), 'access granted')
+        self.assertEqual(response.data.decode('utf-8'), 'access granted:None')
 
     def test_multi_auth_login_invalid_token(self):
         response = self.client.get(

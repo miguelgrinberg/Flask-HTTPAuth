@@ -12,7 +12,7 @@ one of the tokens:
 
 The response should include the username, which is obtained from the token.
 """
-from flask import Flask, g
+from flask import Flask
 from flask_httpauth import HTTPTokenAuth
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
@@ -32,21 +32,18 @@ for user in users:
 
 @auth.verify_token
 def verify_token(token):
-    g.user = None
     try:
         data = token_serializer.loads(token)
     except:  # noqa: E722
         return False
     if 'username' in data:
-        g.user = data['username']
-        return True
-    return False
+        return data['username']
 
 
 @app.route('/')
 @auth.login_required
 def index():
-    return "Hello, %s!" % g.user
+    return "Hello, %s!" % auth.current_user()
 
 
 if __name__ == '__main__':
