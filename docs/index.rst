@@ -197,6 +197,7 @@ API Documentation
 
     The ``realm`` argument can be used to provide an application defined realm with the ``WWW-Authenticate`` header.
 
+
   .. method:: get_password(password_callback)
 
     This callback function will be called by the framework to obtain the password for a given user. Example::
@@ -331,13 +332,15 @@ API Documentation
 
   This class handles HTTP authentication with custom schemes for Flask routes.
 
-  .. method:: __init__(scheme='Bearer', realm=None)
+  .. method:: __init__(scheme='Bearer', realm=None, header=None)
 
     Create a token authentication object.
 
     The ``scheme`` argument can be use to specify the scheme to be used in the ``WWW-Authenticate`` response.
 
     The ``realm`` argument can be used to provide an application defined realm with the ``WWW-Authenticate`` header.
+
+    The ``header`` optional argument, defaults to ``Authorization``. It can be used to define a custom token header.
 
   .. method:: verify_token(verify_token_callback)
 

@@ -19,9 +19,10 @@ __version__ = '3.3.1dev'
 
 
 class HTTPAuth(object):
-    def __init__(self, scheme=None, realm=None):
+    def __init__(self, scheme=None, realm=None, header=None):
         self.scheme = scheme
         self.realm = realm or "Authentication Required"
+        self.header = header
         self.get_password_callback = None
         self.get_user_roles_callback = None
         self.auth_error_callback = None
@@ -61,18 +62,25 @@ class HTTPAuth(object):
         return '{0} realm="{1}"'.format(self.scheme, self.realm)
 
     def get_auth(self):
-        auth = request.authorization
-        if auth is None and 'Authorization' in request.headers:
-            # Flask/Werkzeug do not recognize any authentication types
-            # other than Basic or Digest, so here we parse the header by
-            # hand
-            try:
-                auth_type, token = request.headers['Authorization'].split(
-                    None, 1)
-                auth = Authorization(auth_type, {'token': token})
-            except ValueError:
-                # The Authorization header is either empty or has no token
-                pass
+        auth = None
+        if self.header is None or self.header == 'Authorization':
+            auth = request.authorization
+            if auth is None and 'Authorization' in request.headers:
+                # Flask/Werkzeug do not recognize any authentication types
+                # other than Basic or Digest, so here we parse the header by
+                # hand
+                try:
+                    auth_type, token = request.headers['Authorization'].split(
+                        None, 1)
+                    auth = Authorization(auth_type, {'token': token})
+                except (ValueError, KeyError):
+                    # The Authorization header is either empty or has no token
+                    pass
+        elif self.header in request.headers:
+            # using a custom header, so the entire value of the header is
+            # assumed to be a token
+            auth = Authorization(self.scheme,
+                                 {'token': request.headers[self.header]})
 
         # if the auth type does not match, we act as if there is no auth
         # this is better than failing directly, as it allows the callback
@@ -302,8 +310,8 @@ class HTTPDigestAuth(HTTPAuth):
 
 
 class HTTPTokenAuth(HTTPAuth):
-    def __init__(self, scheme='Bearer', realm=None):
-        super(HTTPTokenAuth, self).__init__(scheme, realm)
+    def __init__(self, scheme='Bearer', realm=None, header=None):
+        super(HTTPTokenAuth, self).__init__(scheme, realm, header)
 
         self.verify_token_callback = None
 
@@ -318,7 +326,6 @@ class HTTPTokenAuth(HTTPAuth):
             token = ""
         if self.verify_token_callback:
             return self.verify_token_callback(token)
-        return False
 
 
 class MultiAuth(object):
