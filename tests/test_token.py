@@ -107,17 +107,15 @@ class HTTPAuthTestCase(unittest.TestCase):
     def test_token_auth_custom_header_invalid_token(self):
         self.token_auth.header = 'X-API-Key'
         response = self.client.get(
-            '/protected', headers={'X-API-Key': 'invalid-token-should-fail'})
+            '/protected', headers={'X-API-Key': 'Schema invalid-token-should-fail'})
         self.assertEqual(response.status_code, 401)
         self.assertTrue('WWW-Authenticate' in response.headers)
 
-    def test_token_auth_custom_header_over_default_token(self):
+    def test_token_auth_default_header_precedence_over_custom(self):
         self.token_auth.header = 'X-API-Key'
-        default_token_response = self.client.get(
-            '/protected', headers={'Authorization': 'MyToken this-is-the-token!'})
-        custom_token_response = self.client.get(
+        response = self.client.get(
             '/protected', headers={'Authorization': 'MyToken this-is-the-token!',
-                                   'X-API-Key': 'MyToken this-is-the-token!'})
+                                   'X-API-Key': 'MyToken invalid-token-should-fail'})
 
-        self.assertEqual(default_token_response.status_code, 401)
-        self.assertEqual(custom_token_response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data.decode('utf-8'), 'token_auth:user')

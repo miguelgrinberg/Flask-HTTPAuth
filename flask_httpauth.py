@@ -63,14 +63,13 @@ class HTTPAuth(object):
 
     def get_auth(self):
         auth = request.authorization
-        if (auth is None and "Authorization" in request.headers)\
-                or self.header in request.headers:
+        header = "Authorization" if "Authorization" in request.headers else self.header
+        if auth is None and header in request.headers:
             # Flask/Werkzeug do not recognize any authentication types
             # other than Basic or Digest, so here we parse the header by
             # hand
             try:
-                auth_type, token = request.headers[
-                    self.header or "Authorization"].split(None, 1)
+                auth_type, token = request.headers[header].split(None, 1)
                 auth = Authorization(auth_type, {'token': token})
             except (ValueError, KeyError):
                 # The Authorization header is either empty or has no token
