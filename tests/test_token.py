@@ -96,3 +96,28 @@ class HTTPAuthTestCase(unittest.TestCase):
         self.assertTrue('WWW-Authenticate' in response.headers)
         self.assertEqual(response.headers['WWW-Authenticate'],
                          'Token realm="foo"')
+
+    def test_token_auth_custom_header_valid_token(self):
+        self.token_auth.header = 'X-API-Key'
+        response = self.client.get(
+            '/protected', headers={'X-API-Key': 'MyToken this-is-the-token!'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data.decode('utf-8'), 'token_auth:user')
+
+    def test_token_auth_custom_header_invalid_token(self):
+        self.token_auth.header = 'X-API-Key'
+        response = self.client.get(
+            '/protected', headers={'X-API-Key': 'invalid-token-should-fail'})
+        self.assertEqual(response.status_code, 401)
+        self.assertTrue('WWW-Authenticate' in response.headers)
+
+    def test_token_auth_custom_header_over_default_token(self):
+        self.token_auth.header = 'X-API-Key'
+        default_token_response = self.client.get(
+            '/protected', headers={'Authorization': 'MyToken this-is-the-token!'})
+        custom_token_response = self.client.get(
+            '/protected', headers={'Authorization': 'MyToken this-is-the-token!',
+                                   'X-API-Key': 'MyToken this-is-the-token!'})
+
+        self.assertEqual(default_token_response.status_code, 401)
+        self.assertEqual(custom_token_response.status_code, 200)

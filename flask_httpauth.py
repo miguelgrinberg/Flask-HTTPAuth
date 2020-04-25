@@ -19,9 +19,10 @@ __version__ = '3.3.1dev'
 
 
 class HTTPAuth(object):
-    def __init__(self, scheme=None, realm=None):
+    def __init__(self, scheme=None, realm=None, header=None):
         self.scheme = scheme
         self.realm = realm or "Authentication Required"
+        self.header = header
         self.get_password_callback = None
         self.get_user_roles_callback = None
         self.auth_error_callback = None
@@ -62,15 +63,16 @@ class HTTPAuth(object):
 
     def get_auth(self):
         auth = request.authorization
-        if auth is None and 'Authorization' in request.headers:
+        if (auth is None and "Authorization" in request.headers)\
+                or self.header in request.headers:
             # Flask/Werkzeug do not recognize any authentication types
             # other than Basic or Digest, so here we parse the header by
             # hand
             try:
-                auth_type, token = request.headers['Authorization'].split(
-                    None, 1)
+                auth_type, token = request.headers[
+                    self.header or "Authorization"].split(None, 1)
                 auth = Authorization(auth_type, {'token': token})
-            except ValueError:
+            except (ValueError, KeyError):
                 # The Authorization header is either empty or has no token
                 pass
 
@@ -295,8 +297,8 @@ class HTTPDigestAuth(HTTPAuth):
 
 
 class HTTPTokenAuth(HTTPAuth):
-    def __init__(self, scheme='Bearer', realm=None):
-        super(HTTPTokenAuth, self).__init__(scheme, realm)
+    def __init__(self, scheme='Bearer', realm=None, header=None):
+        super(HTTPTokenAuth, self).__init__(scheme, realm, header)
 
         self.verify_token_callback = None
 
