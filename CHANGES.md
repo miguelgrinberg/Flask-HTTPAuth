@@ -5,10 +5,10 @@
 - Return user object from verify callbacks ([commit](https://github.com/miguelgrinberg/Flask-HTTPAuth/commit/51748c24f5aa53175b0f2712b814f7ea581f04e4))
 - New role authorization support ([commit](https://github.com/miguelgrinberg/Flask-HTTPAuth/commit/8178f6dd74dab47b993ba532dd12f0cfdb5799f1)) (thanks **gemerden**!)
 - Add a custom token authorization header option ([commit](https://github.com/miguelgrinberg/Flask-HTTPAuth/commit/575b46ade7188152e1b82de84be949bf3f8a300b)) (thanks **Mohamed Feddad**!)
-- Support an optional=True argument in `login_required` decorator ([commit](https://github.com/miguelgrinberg/Flask-HTTPAuth/commit/8ecbb1157822360f5bdb24231fd50f25a6247620))
+- Support an optional=True argument in `login_required` decorator ([commit](https://github.com/miguelgrinberg/Flask-HTTPAuth/commit/8ecbb1157822360f5bdb24231fd50f25a6247620)) (thanks **Saif Almansoori**!)
 - Pass HTTP status code to error callback ([commit](https://github.com/miguelgrinberg/Flask-HTTPAuth/commit/fc8bcd6772b53ef5cc14cd4c6199d63cd2c71f30))
 - More secure example of basic auth in the documentation ([commit](https://github.com/miguelgrinberg/Flask-HTTPAuth/commit/0043e138cd99c7e9fa179ee30ad2283f9b8c704f))
-- Fix broken links in CHANGES.md and changelog template [#85](https://github.com/miguelgrinberg/Flask-HTTPAuth/issues/85) These were pointing at https://github.com/miguelgrinberg/flask-socketio instead of https://github.com/miguelgrinberg/Flask-HTTPAuth ([commit](https://github.com/miguelgrinberg/Flask-HTTPAuth/commit/96fafd43c2d0275f2d4042e95faefce24183ec02)) (thanks **Katie Smith**!)
+- Fix broken links in CHANGES.md and changelog template [#85](https://github.com/miguelgrinberg/Flask-HTTPAuth/issues/85) ([commit](https://github.com/miguelgrinberg/Flask-HTTPAuth/commit/96fafd43c2d0275f2d4042e95faefce24183ec02)) (thanks **Katie Smith**!)
 
 **Release 3.3.0** - 2019-05-19
 
