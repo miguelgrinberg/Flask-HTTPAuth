@@ -36,6 +36,11 @@ class HTTPAuthTestCase(unittest.TestCase):
         def token_auth_route():
             return 'token_auth:' + token_auth.current_user()
 
+        @app.route('/protected-optional')
+        @token_auth.login_required(optional=True)
+        def token_auth_optional_route():
+            return 'token_auth:' + str(token_auth.current_user())
+
         @app.route('/protected2')
         @token_auth2.login_required
         def token_auth_route2():
@@ -73,6 +78,10 @@ class HTTPAuthTestCase(unittest.TestCase):
             '/protected', headers={'Authorization':
                                    'mytoken this-is-the-token!'})
         self.assertEqual(response.data.decode('utf-8'), 'token_auth:user')
+
+    def test_token_auth_login_optional(self):
+        response = self.client.get('/protected-optional')
+        self.assertEqual(response.data.decode('utf-8'), 'token_auth:None')
 
     def test_token_auth_login_invalid_token(self):
         response = self.client.get(

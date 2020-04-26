@@ -297,6 +297,14 @@ API Documentation
       def private_page():
           return "Only for admins!"
 
+    An optional ``optional`` argument can be set to ``True`` to allow the route to execute also when authentication is not included with the request, in which case ``auth.current_user()`` will be set to ``None``. Example::
+
+      @app.route('/private')
+      @auth.login_required(optional=True)
+      def private_page():
+          user = auth.current_user()
+          return "Hello {}!".format(user.name if user is not None else 'anonymous')
+
   .. method:: current_user()
 
     The user object returned by the ``verify_password`` callback on successful authentication. If no user is returned by the callback, this is set to the username passed by the client. Example::
