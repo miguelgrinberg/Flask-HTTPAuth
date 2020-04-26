@@ -29,8 +29,8 @@ class HTTPAuth(object):
         def default_get_password(username):
             return None
 
-        def default_auth_error():
-            return "Unauthorized Access"
+        def default_auth_error(status):
+            return "Unauthorized Access", status
 
         self.get_password(default_get_password)
         self.error_handler(default_auth_error)
@@ -133,12 +133,19 @@ class HTTPAuth(object):
                 if request.method != 'OPTIONS':  # pragma: no cover
                     password = self.get_auth_password(auth)
 
+                    status = None
                     user = self.authenticate(auth, password)
-                    if user in (False, None) or not self.authorize(
-                            role, user, auth):
+                    if user in (False, None):
+                        status = 401
+                    elif not self.authorize(role, user, auth):
+                        status = 403
+                    if status:
                         # Clear TCP receive buffer of any pending data
                         request.data
-                        return self.auth_error_callback()
+                        try:
+                            return self.auth_error_callback(status)
+                        except TypeError:
+                            return self.auth_error_callback()
 
                     g.flask_httpauth_user = user if user is not True \
                         else auth.username if auth else None
