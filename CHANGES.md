@@ -1,5 +1,9 @@
 # Flask-HTTPAuth change log
 
+**Release 4.1.0** - 2020-06-04
+
+- Basic authentication with custom scheme ([commit](https://github.com/miguelgrinberg/Flask-HTTPAuth/commit/1aaf872716cb46330fd49e89663da1a568e54f0b))
+
 **Release 4.0.0** - 2020-04-26
 
 - Return user object from verify callbacks ([commit](https://github.com/miguelgrinberg/Flask-HTTPAuth/commit/51748c24f5aa53175b0f2712b814f7ea581f04e4))
