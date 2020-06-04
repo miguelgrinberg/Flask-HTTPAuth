@@ -8,6 +8,7 @@ This module provides Basic and Digest HTTP authentication for Flask routes.
 :license:   MIT, see LICENSE for more details.
 """
 
+from base64 import b64decode
 from functools import wraps
 from hashlib import md5
 from random import Random, SystemRandom
@@ -190,6 +191,22 @@ class HTTPBasicAuth(HTTPAuth):
     def verify_password(self, f):
         self.verify_password_callback = f
         return f
+
+    def get_auth(self):
+        # this version of the Authorization header parser is more flexible
+        # than Werkzeug's, as it also accepts other schemes besides "Basic"
+        header = self.header or 'Authorization'
+        if header not in request.headers:
+            return None
+        value = request.headers[header].encode('utf-8')
+        try:
+            scheme, credentials = value.split(b' ', 1)
+            username, password = b64decode(credentials).split(b':', 1)
+        except (ValueError, TypeError):
+            return None
+        return Authorization(
+            scheme, {'username': username.decode('utf-8'),
+                     'password': password.decode('utf-8')})
 
     def authenticate(self, auth, stored_password):
         if auth:
