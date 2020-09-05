@@ -352,9 +352,11 @@ class MultiAuth(object):
         self.main_auth = main_auth
         self.additional_auth = args
 
-    def login_required(self, f=None, role=None):
-        if f is not None and role is not None:  # pragma: no cover
-            raise ValueError('role is the only supported argument')
+    def login_required(self, f=None, role=None, optional=None):
+        if f is not None and \
+                (role is not None or optional is not None):  # pragma: no cover
+            raise ValueError(
+                'role and optional are the only supported arguments')
 
         def login_required_internal(f):
             @wraps(f)
@@ -374,7 +376,7 @@ class MultiAuth(object):
                                 break
                 if selected_auth is None:
                     selected_auth = self.main_auth
-                return selected_auth.login_required(role=role)(f)(
+                return selected_auth.login_required(role=role,optional=optional)(f)(
                     *args, **kwargs)
             return decorated
 
