@@ -376,8 +376,9 @@ class MultiAuth(object):
                                 break
                 if selected_auth is None:
                     selected_auth = self.main_auth
-                return selected_auth.login_required(role=role,optional=optional)(f)(
-                    *args, **kwargs)
+                return selected_auth.login_required(role=role,
+                                                    optional=optional
+                                                    )(f)(*args, **kwargs)
             return decorated
 
         if f:
