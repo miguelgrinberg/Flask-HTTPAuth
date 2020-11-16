@@ -1,5 +1,11 @@
 # Flask-HTTPAuth change log
 
+**Release 4.2.0** - 2020-11-16
+
+- Allow error response to return a 200 status code [#114](https://github.com/miguelgrinberg/Flask-HTTPAuth/issues/114) ([commit](https://github.com/miguelgrinberg/Flask-HTTPAuth/commit/f3e6a5754e89cda30fa88ef8b9dfa31e1697a688))
+- Add optional argument to MultiAuth class [#115](https://github.com/miguelgrinberg/Flask-HTTPAuth/issues/115) ([commit](https://github.com/miguelgrinberg/Flask-HTTPAuth/commit/e3c6e5fb0481c14c326460408c2d0d038adf7ddc)) (thanks **pryankster** and **Michael Wright**!)
+- Remove python 3.5 and add python 3.9 to build ([commit](https://github.com/miguelgrinberg/Flask-HTTPAuth/commit/507a7c0bfdf7da3bfb6a0cff9624295cf1119986))
+
 **Release 4.1.0** - 2020-06-04
 
 - Basic authentication with custom scheme ([commit](https://github.com/miguelgrinberg/Flask-HTTPAuth/commit/1aaf872716cb46330fd49e89663da1a568e54f0b))
