@@ -12,7 +12,7 @@ from base64 import b64decode
 from functools import wraps
 from hashlib import md5
 from random import Random, SystemRandom
-from flask import request, make_response, session, g
+from flask import request, make_response, session, g, Response
 from werkzeug.datastructures import Authorization
 from werkzeug.security import safe_str_cmp
 
@@ -49,8 +49,9 @@ class HTTPAuth(object):
         @wraps(f)
         def decorated(*args, **kwargs):
             res = f(*args, **kwargs)
+            check_status_code = not isinstance(res, (tuple, Response))
             res = make_response(res)
-            if res.status_code == 200:
+            if check_status_code and res.status_code == 200:
                 # if user didn't set status code, use 401
                 res.status_code = 401
             if 'WWW-Authenticate' not in res.headers.keys():
