@@ -1,7 +1,7 @@
 Flask-HTTPAuth
 ==============
 
-[![Build Status](https://travis-ci.org/miguelgrinberg/Flask-HTTPAuth.png?branch=master)](https://travis-ci.org/miguelgrinberg/Flask-HTTPAuth)
+![Status](https://github.com/miguelgrinberg/Flask-HTTPAuth/workflows/Tests/badge.svg) [![codecov](https://codecov.io/gh/miguelgrinberg/Flask-HTTPAuth/branch/master/graph/badge.svg?token=KeU2002DHo)](https://codecov.io/gh/miguelgrinberg/Flask-HTTPAuth)
 
 Simple extension that provides Basic and Digest HTTP authentication for Flask routes.
 
