@@ -39,7 +39,7 @@ The following example application uses HTTP Basic authentication to protect rout
    if __name__ == '__main__':
        app.run()
 
-The function decorated with the ``verify_password`` decorator receives the username and password sent by the client. If the credentials belong to a user, then the function should return the user object. If the credentials are invalid the functon can return ``None`` or ``False``. The user object can then be queries from the ``current_user()`` method of the authentication instance.
+The function decorated with the ``verify_password`` decorator receives the username and password sent by the client. If the credentials belong to a user, then the function should return the user object. If the credentials are invalid the functon can return ``None`` or ``False``. The user object can then be queried from the ``current_user()`` method of the authentication instance.
 
 Digest authentication example
 -----------------------------
