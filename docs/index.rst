@@ -27,9 +27,10 @@ The following example application uses HTTP Basic authentication to protect rout
 
    @auth.verify_password
    def verify_password(username, password):
-       if username in users and \
-               check_password_hash(users.get(username), password):
-           return username
+       # Check a password hash, even if user doesn't exist to prevent timing attacks
+       if check_password_hash(users.get(username, 'not-the-password'), password):
+           if username in users:
+               return username
 
    @app.route('/')
    @auth.login_required
