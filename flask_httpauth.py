@@ -169,9 +169,10 @@ class HTTPAuth(object):
         return login_required_internal
 
     def username(self):
-        if not request.authorization:
+        auth = self.get_auth()
+        if not auth:
             return ""
-        return request.authorization.username
+        return auth.username
 
     def current_user(self):
         if hasattr(g, 'flask_httpauth_user'):
@@ -205,9 +206,14 @@ class HTTPBasicAuth(HTTPAuth):
             username, password = b64decode(credentials).split(b':', 1)
         except (ValueError, TypeError):
             return None
+        try:
+            username = username.decode('utf-8')
+            password = password.decode('utf-8')
+        except UnicodeDecodeError:
+            username = None
+            password = None
         return Authorization(
-            scheme, {'username': username.decode('utf-8'),
-                     'password': password.decode('utf-8')})
+            scheme, {'username': username, 'password': password})
 
     def authenticate(self, auth, stored_password):
         if auth:

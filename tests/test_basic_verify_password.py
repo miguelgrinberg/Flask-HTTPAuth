@@ -75,6 +75,13 @@ class HTTPAuthTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 403)
         self.assertTrue('WWW-Authenticate' in response.headers)
 
+    def test_verify_auth_login_malformed_password(self):
+        creds = 'eyJhbGciOieyJp=='
+        response = self.client.get('/basic-verify',
+                                   headers={'Authorization': 'Basic ' + creds})
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue('WWW-Authenticate' in response.headers)
+
 
 class HTTPAuthTestCaseOldStyle(HTTPAuthTestCase):
     use_old_style_callback = True
