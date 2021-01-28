@@ -203,11 +203,12 @@ class HTTPBasicAuth(HTTPAuth):
         try:
             scheme, credentials = value.split(b' ', 1)
             username, password = b64decode(credentials).split(b':', 1)
+
+            return Authorization(
+                scheme, {'username': username.decode('utf-8'),
+                         'password': password.decode('utf-8')})
         except (ValueError, TypeError):
             return None
-        return Authorization(
-            scheme, {'username': username.decode('utf-8'),
-                     'password': password.decode('utf-8')})
 
     def authenticate(self, auth, stored_password):
         if auth:
