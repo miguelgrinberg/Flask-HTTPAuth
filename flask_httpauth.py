@@ -26,6 +26,7 @@ class HTTPAuth(object):
         self.header = header
         self.get_password_callback = None
         self.get_user_roles_callback = None
+        self.get_user_resources_callback = None
         self.auth_error_callback = None
 
         def default_get_password(username):
@@ -43,6 +44,10 @@ class HTTPAuth(object):
 
     def get_user_roles(self, f):
         self.get_user_roles_callback = f
+        return f
+
+    def get_user_resources(self, f):
+        self.get_user_resources_callback = f
         return f
 
     def error_handler(self, f):
@@ -100,37 +105,56 @@ class HTTPAuth(object):
 
         return password
 
-    def authorize(self, role, user, auth):
-        if role is None:
+    def authorize(self, role, resource, user, auth):
+        if role is None and resource is None:
             return True
-        if isinstance(role, (list, tuple)):
-            roles = role
-        else:
-            roles = [role]
-        if user is True:
-            user = auth
-        if self.get_user_roles_callback is None:  # pragma: no cover
-            raise ValueError('get_user_roles callback is not defined')
-        user_roles = self.get_user_roles_callback(user)
-        if user_roles is None:
-            user_roles = {}
-        elif not isinstance(user_roles, (list, tuple)):
-            user_roles = {user_roles}
-        else:
-            user_roles = set(user_roles)
-        for role in roles:
-            if isinstance(role, (list, tuple)):
-                role = set(role)
-                if role & user_roles == role:
-                    return True
-            elif role in user_roles:
-                return True
 
-    def login_required(self, f=None, role=None, optional=None):
+        if role is not None:
+            if isinstance(role, (list, tuple)):
+                roles = role
+            else:
+                roles = [role]
+            if user is True:
+                user = auth
+            if self.get_user_roles_callback is None:  # pragma: no cover
+                raise ValueError('get_user_roles callback is not defined')
+            user_roles = self.get_user_roles_callback(user)
+            if user_roles is None:
+                user_roles = {}
+            elif not isinstance(user_roles, (list, tuple)):
+                user_roles = {user_roles}
+            else:
+                user_roles = set(user_roles)
+            for role in roles:
+                if isinstance(role, (list, tuple)):
+                    role = set(role)
+                    if role & user_roles == role:
+                        return True
+                elif role in user_roles:
+                    return True
+
+        if resource is not None:
+            if not isinstance(resource, str):
+                raise ValueError('only support to define resource as a string value')
+            if user is True:
+                user = auth
+            if self.get_user_resources_callback is None:  # pragma: no cover
+                raise ValueError('get_user_resources callback is not defined')
+            user_resources = self.get_user_resources_callback(user)
+            if user_resources is None:
+                user_resources = []
+            if isinstance(user_resources, (list, tuple)):
+                user_resources = set(user_resources)
+            if resource in user_resources:
+                return True
+            else:
+                return False
+
+    def login_required(self, f=None, role=None, resource=None, optional=None):
         if f is not None and \
-                (role is not None or optional is not None):  # pragma: no cover
+                (role is not None or resource is not None or optional is not None):  # pragma: no cover
             raise ValueError(
-                'role and optional are the only supported arguments')
+                'role, resource and optional are the only supported arguments')
 
         def login_required_internal(f):
             @wraps(f)
@@ -149,7 +173,7 @@ class HTTPAuth(object):
                     user = self.authenticate(auth, password)
                     if user in (False, None):
                         status = 401
-                    elif not self.authorize(role, user, auth):
+                    elif not self.authorize(role, resource, user, auth):
                         status = 403
                     if not optional and status:
                         # Clear TCP receive buffer of any pending data
@@ -359,11 +383,11 @@ class MultiAuth(object):
         self.main_auth = main_auth
         self.additional_auth = args
 
-    def login_required(self, f=None, role=None, optional=None):
+    def login_required(self, f=None, role=None, resource=None, optional=None):
         if f is not None and \
-                (role is not None or optional is not None):  # pragma: no cover
+                (role is not None or resource is not None or optional is not None):  # pragma: no cover
             raise ValueError(
-                'role and optional are the only supported arguments')
+                'role, resource and optional are the only supported arguments')
 
         def login_required_internal(f):
             @wraps(f)
@@ -383,7 +407,7 @@ class MultiAuth(object):
                                 break
                 if selected_auth is None:
                     selected_auth = self.main_auth
-                return selected_auth.login_required(role=role,
+                return selected_auth.login_required(role=role, resource=resource,
                                                     optional=optional
                                                     )(f)(*args, **kwargs)
             return decorated
