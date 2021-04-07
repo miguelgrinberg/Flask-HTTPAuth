@@ -355,9 +355,37 @@ class HTTPTokenAuth(HTTPAuth):
 
 
 class MultiAuth(object):
-    def __init__(self, main_auth, *args):
-        self.main_auth = main_auth
-        self.additional_auth = args
+    def __init__(self, *auth_list):
+        if len(auth_list) < 1:  # pragma: no cover
+            raise ValueError(
+                'multi-auth can not work unless there at lease one auth')
+        self.auth_list = auth_list
+
+    def detect_auth_by_authenticate(self, auth_list):
+        selected_auth = None
+        for auth in auth_list:
+            header = auth.header if auth.header is not None \
+                else 'Authorization'
+            authenticate = request.headers.get(header)
+            if authenticate is None:
+                continue
+            # only token auth support customized header, and in customized
+            # header case, we can not detect scheme from authenticate, because
+            # the entire value of header is assumed to be the token
+            if header != 'Authorization':
+                selected_auth = auth
+                break
+            else:
+                try:
+                    scheme, creds = authenticate.split(None, 1)
+                except ValueError:
+                    # malformed Authorization header
+                    pass
+                else:
+                    if auth.scheme == scheme:
+                        selected_auth = auth
+                        break
+        return selected_auth
 
     def login_required(self, f=None, role=None, optional=None):
         if f is not None and \
@@ -368,21 +396,17 @@ class MultiAuth(object):
         def login_required_internal(f):
             @wraps(f)
             def decorated(*args, **kwargs):
-                selected_auth = None
-                if 'Authorization' in request.headers:
-                    try:
-                        scheme, creds = request.headers[
-                            'Authorization'].split(None, 1)
-                    except ValueError:
-                        # malformed Authorization header
-                        pass
-                    else:
-                        for auth in self.additional_auth:
-                            if auth.scheme == scheme:
-                                selected_auth = auth
-                                break
+                selected_auth = self.detect_auth_by_authenticate(
+                    self.auth_list)
                 if selected_auth is None:
-                    selected_auth = self.main_auth
+                    # no auth found, it may be the first request of digest auth
+                    # try to find digest auth
+                    for auth in self.auth_list:
+                        if isinstance(auth, HTTPDigestAuth):
+                            selected_auth = auth
+                if selected_auth is None:
+                    # can not detect auth, try the first one
+                    selected_auth = self.auth_list[0]
                 return selected_auth.login_required(role=role,
                                                     optional=optional
                                                     )(f)(*args, **kwargs)
