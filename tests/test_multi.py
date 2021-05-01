@@ -11,7 +11,8 @@ class HTTPAuthTestCase(unittest.TestCase):
 
         basic_auth = HTTPBasicAuth()
         token_auth = HTTPTokenAuth('MyToken')
-        multi_auth = MultiAuth(basic_auth, token_auth)
+        custom_token_auth = HTTPTokenAuth(header='X-Token')
+        multi_auth = MultiAuth(basic_auth, token_auth, custom_token_auth)
 
         @basic_auth.verify_password
         def verify_password(username, password):
@@ -36,6 +37,16 @@ class HTTPAuthTestCase(unittest.TestCase):
         @token_auth.error_handler
         def error_handler():
             return 'error', 401, {'WWW-Authenticate': 'MyToken realm="Foo"'}
+
+        @custom_token_auth.verify_token
+        def verify_custom_token(token):
+            return token == 'this-is-the-custom-token!'
+
+        @custom_token_auth.get_user_roles
+        def get_custom_token_role(auth):
+            if auth['token'] == 'this-is-the-custom-token!':
+                return 'foo'
+            return
 
         @app.route('/')
         def index():
@@ -91,6 +102,19 @@ class HTTPAuthTestCase(unittest.TestCase):
         self.assertEqual(response.headers['WWW-Authenticate'],
                          'MyToken realm="Foo"')
 
+    def test_multi_auth_login_valid_custom_token(self):
+        response = self.client.get(
+            '/protected', headers={'X-Token': 'this-is-the-custom-token!'})
+        self.assertEqual(response.data.decode('utf-8'), 'access granted:None')
+
+    def test_multi_auth_login_invalid_custom_token(self):
+        response = self.client.get(
+            '/protected', headers={'X-Token': 'this-is-not-the-token!'})
+        self.assertEqual(response.status_code, 401)
+        self.assertTrue('WWW-Authenticate' in response.headers)
+        self.assertEqual(response.headers['WWW-Authenticate'],
+                         'Bearer realm="Authentication Required"')
+
     def test_multi_auth_login_invalid_scheme(self):
         response = self.client.get(
             '/protected', headers={'Authorization': 'Foo this-is-the-token!'})
@@ -115,4 +139,10 @@ class HTTPAuthTestCase(unittest.TestCase):
         response = self.client.get(
             '/protected-with-role', headers={'Authorization':
                                              'MyToken this-is-the-token!'})
+        self.assertEqual(response.data.decode('utf-8'), 'role access granted')
+
+    def test_multi_auth_login_valid_custom_token_role(self):
+        response = self.client.get(
+            '/protected-with-role', headers={'X-Token':
+                                             'this-is-the-custom-token!'})
         self.assertEqual(response.data.decode('utf-8'), 'role access granted')

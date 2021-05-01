@@ -37,6 +37,18 @@ class HTTPAuth(object):
         self.get_password(default_get_password)
         self.error_handler(default_auth_error)
 
+    def is_compatible_auth(self, headers):
+        if self.header is None or self.header == 'Authorization':
+            try:
+                scheme, _ = request.headers.get('Authorization', '').split(
+                    None, 1)
+            except ValueError:
+                # malformed Authorization header
+                return False
+            return scheme == self.scheme
+        else:
+            return self.header in headers
+
     def get_password(self, f):
         self.get_password_callback = f
         return f
@@ -368,21 +380,12 @@ class MultiAuth(object):
         def login_required_internal(f):
             @wraps(f)
             def decorated(*args, **kwargs):
-                selected_auth = None
-                if 'Authorization' in request.headers:
-                    try:
-                        scheme, creds = request.headers[
-                            'Authorization'].split(None, 1)
-                    except ValueError:
-                        # malformed Authorization header
-                        pass
-                    else:
-                        for auth in self.additional_auth:
-                            if auth.scheme == scheme:
-                                selected_auth = auth
-                                break
-                if selected_auth is None:
-                    selected_auth = self.main_auth
+                selected_auth = self.main_auth
+                if not self.main_auth.is_compatible_auth(request.headers):
+                    for auth in self.additional_auth:
+                        if auth.is_compatible_auth(request.headers):
+                            selected_auth = auth
+                            break
                 return selected_auth.login_required(role=role,
                                                     optional=optional
                                                     )(f)(*args, **kwargs)
