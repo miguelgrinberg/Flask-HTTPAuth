@@ -1,5 +1,12 @@
 # Flask-HTTPAuth change log
 
+**Release 4.3.0** - 2021-05-01
+
+- Support token auth with custom header in MultiAuth class [#125](https://github.com/miguelgrinberg/Flask-HTTPAuth/issues/125) ([commit](https://github.com/miguelgrinberg/Flask-HTTPAuth/commit/6509081c72a2f92c1500b3f09aa063441ea60031))
+- Catch `UnicodeDecodeError` when passing malformed data in authorization header [#122](https://github.com/miguelgrinberg/Flask-HTTPAuth/issues/122) ([commit](https://github.com/miguelgrinberg/Flask-HTTPAuth/commit/538569f5895834a9f7b8d4dcfd543be6fbfca37e)) (thanks **Bastian Raschke**!)
+- Fixes typo [#116](https://github.com/miguelgrinberg/Flask-HTTPAuth/issues/116) ([commit](https://github.com/miguelgrinberg/Flask-HTTPAuth/commit/9b4659e47b7e05a630f91b7e9471feef5111b503)) (thanks **Renato Oliveira**!)
+- Move builds to GitHub actions ([commit](https://github.com/miguelgrinberg/Flask-HTTPAuth/commit/588b277cae820a680199e0acf5a97e2be50c6f6c))
+
 **Release 4.2.0** - 2020-11-16
 
 - Allow error response to return a 200 status code [#114](https://github.com/miguelgrinberg/Flask-HTTPAuth/issues/114) ([commit](https://github.com/miguelgrinberg/Flask-HTTPAuth/commit/f3e6a5754e89cda30fa88ef8b9dfa31e1697a688))
