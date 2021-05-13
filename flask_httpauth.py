@@ -7,14 +7,14 @@ This module provides Basic and Digest HTTP authentication for Flask routes.
 :copyright: (C) 2014 by Miguel Grinberg.
 :license:   MIT, see LICENSE for more details.
 """
-
+import hmac
 from base64 import b64decode
 from functools import wraps
 from hashlib import md5
 from random import Random, SystemRandom
 from flask import request, make_response, session, g, Response
 from werkzeug.datastructures import Authorization
-from werkzeug.security import safe_str_cmp
+
 
 __version__ = '4.3.1dev'
 
@@ -246,7 +246,7 @@ class HTTPBasicAuth(HTTPAuth):
                                                               client_password)
         return auth.username if client_password is not None and \
             stored_password is not None and \
-            safe_str_cmp(client_password, stored_password) else None
+            hmac.compare_digest(client_password, stored_password) else None
 
 
 class HTTPDigestAuth(HTTPAuth):
@@ -275,7 +275,7 @@ class HTTPDigestAuth(HTTPAuth):
             session_nonce = session.get("auth_nonce")
             if nonce is None or session_nonce is None:
                 return False
-            return safe_str_cmp(nonce, session_nonce)
+            return hmac.compare_digest(nonce, session_nonce)
 
         def default_generate_opaque():
             session["auth_opaque"] = _generate_random()
@@ -285,7 +285,7 @@ class HTTPDigestAuth(HTTPAuth):
             session_opaque = session.get("auth_opaque")
             if opaque is None or session_opaque is None:  # pragma: no cover
                 return False
-            return safe_str_cmp(opaque, session_opaque)
+            return hmac.compare_digest(opaque, session_opaque)
 
         self.generate_nonce(default_generate_nonce)
         self.generate_opaque(default_generate_opaque)
@@ -344,7 +344,7 @@ class HTTPDigestAuth(HTTPAuth):
         ha2 = md5(a2.encode('utf-8')).hexdigest()
         a3 = ha1 + ":" + auth.nonce + ":" + ha2
         response = md5(a3.encode('utf-8')).hexdigest()
-        return safe_str_cmp(response, auth.response)
+        return hmac.compare_digest(response, auth.response)
 
 
 class HTTPTokenAuth(HTTPAuth):
