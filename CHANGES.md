@@ -1,5 +1,10 @@
 # Flask-HTTPAuth change log
 
+**Release 4.4.0** - 2021-05-13
+
+- Replace `safe_str_cmp` with `hmac.compare_digest` to avoid a deprecation warning from Werkzeug [#126](https://github.com/miguelgrinberg/Flask-HTTPAuth/issues/126) ([commit](https://github.com/miguelgrinberg/Flask-HTTPAuth/commit/79e3ebf77f4ad6a56a02996a08c4517f61151d49)) (thanks **Federico Martinez**!)
+- Drop Python 2 support ([commit](https://github.com/miguelgrinberg/Flask-HTTPAuth/commit/e690ce56827de9d669718fa5d0fcda63112f8008))
+
 **Release 4.3.0** - 2021-05-01
 
 - Support token auth with custom header in MultiAuth class [#125](https://github.com/miguelgrinberg/Flask-HTTPAuth/issues/125) ([commit](https://github.com/miguelgrinberg/Flask-HTTPAuth/commit/6509081c72a2f92c1500b3f09aa063441ea60031))
