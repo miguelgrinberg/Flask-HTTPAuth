@@ -16,9 +16,6 @@ from flask import request, make_response, session, g, Response
 from werkzeug.datastructures import Authorization
 
 
-__version__ = '4.4.1dev'
-
-
 class HTTPAuth(object):
     def __init__(self, scheme=None, realm=None, header=None):
         self.scheme = scheme
