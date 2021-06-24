@@ -12,7 +12,7 @@ from base64 import b64decode
 from functools import wraps
 from hashlib import md5
 from random import Random, SystemRandom
-from flask import request, make_response, session, g, Response
+from flask import request, make_response, session, g, Response, current_app
 from werkzeug.datastructures import Authorization
 
 
@@ -57,7 +57,7 @@ class HTTPAuth(object):
     def error_handler(self, f):
         @wraps(f)
         def decorated(*args, **kwargs):
-            res = f(*args, **kwargs)
+            res = self.ensure_sync(f)(*args, **kwargs)
             check_status_code = not isinstance(res, (tuple, Response))
             res = make_response(res)
             if check_status_code and res.status_code == 200:
@@ -105,7 +105,8 @@ class HTTPAuth(object):
         password = None
 
         if auth and auth.username:
-            password = self.get_password_callback(auth.username)
+            password = self.ensure_sync(self.get_password_callback)(
+                auth.username)
 
         return password
 
@@ -120,7 +121,7 @@ class HTTPAuth(object):
             user = auth
         if self.get_user_roles_callback is None:  # pragma: no cover
             raise ValueError('get_user_roles callback is not defined')
-        user_roles = self.get_user_roles_callback(user)
+        user_roles = self.ensure_sync(self.get_user_roles_callback)(user)
         if user_roles is None:
             user_roles = {}
         elif not isinstance(user_roles, (list, tuple)):
@@ -170,7 +171,7 @@ class HTTPAuth(object):
 
                     g.flask_httpauth_user = user if user is not True \
                         else auth.username if auth else None
-                return f(*args, **kwargs)
+                return self.ensure_sync(f)(*args, **kwargs)
             return decorated
 
         if f:
@@ -186,6 +187,12 @@ class HTTPAuth(object):
     def current_user(self):
         if hasattr(g, 'flask_httpauth_user'):
             return g.flask_httpauth_user
+
+    def ensure_sync(self, f):
+        try:
+            return current_app.ensure_sync(f)
+        except AttributeError:  # pragma: no cover
+            return f
 
 
 class HTTPBasicAuth(HTTPAuth):
@@ -232,15 +239,17 @@ class HTTPBasicAuth(HTTPAuth):
             username = ""
             client_password = ""
         if self.verify_password_callback:
-            return self.verify_password_callback(username, client_password)
+            return self.ensure_sync(self.verify_password_callback)(
+                username, client_password)
         if not auth:
             return
         if self.hash_password_callback:
             try:
-                client_password = self.hash_password_callback(client_password)
+                client_password = self.ensure_sync(
+                    self.hash_password_callback)(client_password)
             except TypeError:
-                client_password = self.hash_password_callback(username,
-                                                              client_password)
+                client_password = self.ensure_sync(
+                    self.hash_password_callback)(username, client_password)
         return auth.username if client_password is not None and \
             stored_password is not None and \
             hmac.compare_digest(client_password, stored_password) else None
@@ -360,7 +369,7 @@ class HTTPTokenAuth(HTTPAuth):
         else:
             token = ""
         if self.verify_token_callback:
-            return self.verify_token_callback(token)
+            return self.ensure_sync(self.verify_token_callback)(token)
 
 
 class MultiAuth(object):
@@ -383,9 +392,8 @@ class MultiAuth(object):
                         if auth.is_compatible_auth(request.headers):
                             selected_auth = auth
                             break
-                return selected_auth.login_required(role=role,
-                                                    optional=optional
-                                                    )(f)(*args, **kwargs)
+                return selected_auth.login_required(
+                    role=role, optional=optional)(f)(*args, **kwargs)
             return decorated
 
         if f:
