@@ -108,7 +108,7 @@ Token Authentication Example
 
 The following example application uses a custom HTTP authentication scheme to protect route ``'/'`` with a token::
 
-    from flask import Flask, g
+    from flask import Flask
     from flask_httpauth import HTTPTokenAuth
 
     app = Flask(__name__)
