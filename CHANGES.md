@@ -1,5 +1,12 @@
 # Flask-HTTPAuth change log
 
+**Release 4.5.0** - 2021-10-25
+
+- Support for Flask 2 async views ([commit](https://github.com/miguelgrinberg/flask-httpauth/commit/dc6de2dc9e1203e42d2763a0914e16ce96b74035))
+- Do not read the request body [#138](https://github.com/miguelgrinberg/flask-httpauth/issues/138) ([commit](https://github.com/miguelgrinberg/flask-httpauth/commit/d8b5e37c960263717117ae469f083d65e0f50972))
+- Remove unused `flask.g` import in token authentication example [#137](https://github.com/miguelgrinberg/flask-httpauth/issues/137) ([commit](https://github.com/miguelgrinberg/flask-httpauth/commit/7e5f9cf8167086e23e2d26c5d083a88e2e3b01ac)) (thanks **Jonas Sandström**!)
+- Fixed documentation typo [#127](https://github.com/miguelgrinberg/flask-httpauth/issues/127) ([commit](https://github.com/miguelgrinberg/flask-httpauth/commit/14fb9d5692bcd04a5679c38b1a3cb54ae38ced21)) (thanks **Reggie V**!)
+
 **Release 4.4.0** - 2021-05-13
 
 - Replace `safe_str_cmp` with `hmac.compare_digest` to avoid a deprecation warning from Werkzeug [#126](https://github.com/miguelgrinberg/Flask-HTTPAuth/issues/126) ([commit](https://github.com/miguelgrinberg/Flask-HTTPAuth/commit/79e3ebf77f4ad6a56a02996a08c4517f61151d49)) (thanks **Federico Martinez**!)
