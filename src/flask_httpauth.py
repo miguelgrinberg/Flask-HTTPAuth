@@ -217,7 +217,7 @@ class HTTPBasicAuth(HTTPAuth):
         value = request.headers[header].encode('utf-8')
         try:
             scheme, credentials = value.split(b' ', 1)
-            username, password = b64decode(credentials).split(b':', 1)
+            username, password = b64decode(credentials).rsplit(b':', 1)
         except (ValueError, TypeError):
             return None
         try:
