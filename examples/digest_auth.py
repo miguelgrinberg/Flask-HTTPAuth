@@ -21,14 +21,14 @@ from flask_httpauth import HTTPDigestAuth
 from flask_session import Session
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secr=ere'
+app.config['SECRET_KEY'] = 'secret key here'
 app.config['SESSION_TYPE'] = 'filesystem'
 auth = HTTPDigestAuth()
 Session(app)
 
 users = {
     "john": "hello",
-    "susan": "bye"
+    "homi": "bye"
 }
 
 
