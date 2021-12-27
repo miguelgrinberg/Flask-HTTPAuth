@@ -10,10 +10,13 @@ gain access, you can use (username=john, password=hello) or
 """
 from flask import Flask
 from flask_httpauth import HTTPDigestAuth
+from flask_session import Session
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret key here'
+app.config['SECRET_KEY'] = 'secr=ere'
+app.config['SESSION_TYPE'] = 'filesystem'
 auth = HTTPDigestAuth()
+Session(app)
 
 users = {
     "john": "hello",
