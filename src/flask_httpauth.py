@@ -136,11 +136,11 @@ class HTTPAuth(object):
             elif role in user_roles:
                 return True
 
-    def login_required(self, f=None, role=None, optional=None):
-        if f is not None and \
-                (role is not None or optional is not None):  # pragma: no cover
-            raise ValueError(
-                'role and optional are the only supported arguments')
+    def login_required(self, f=None, role=None, optional=None, get_item_f=None, get_item_view_arg="id"):
+    if f is not None and \
+            (role is not None or optional is not None):  # pragma: no cover
+        raise ValueError(
+            'role and optional are the only supported arguments')
 
         def login_required_internal(f):
             @wraps(f)
@@ -161,6 +161,11 @@ class HTTPAuth(object):
                         status = 401
                     elif not self.authorize(role, user, auth):
                         status = 403
+                    elif get_item_f and get_item_view_arg:
+                        item_id = request.view_args[get_item_view_arg]
+                        item = get_item_f(id=item_id)
+                        if item.owner_id != user.id:
+                            status = 403
                     if not optional and status:
                         try:
                             return self.auth_error_callback(status)
