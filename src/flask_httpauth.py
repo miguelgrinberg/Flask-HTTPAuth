@@ -142,6 +142,14 @@ class HTTPAuth(object):
             raise ValueError(
                 'role and optional are the only supported arguments')
 
+        def check_owner(user):
+            if get_item_f:
+                item_id = request.view_args[get_item_view_arg]
+                item = get_item_f(id=item_id)
+
+                if item.owner_id == user.id:
+                    return True
+
         def login_required_internal(f):
             @wraps(f)
             def decorated(*args, **kwargs):
@@ -159,13 +167,8 @@ class HTTPAuth(object):
                     user = self.authenticate(auth, password)
                     if user in (False, None):
                         status = 401
-                    elif not self.authorize(role, user, auth):
+                    elif not (self.authorize(role, user, auth) or check_owner(user)):
                         status = 403
-                    elif get_item_f and get_item_view_arg:
-                        item_id = request.view_args[get_item_view_arg]
-                        item = get_item_f(id=item_id)
-                        if item.owner_id != user.id:
-                            status = 403
                     if not optional and status:
                         try:
                             return self.auth_error_callback(status)
