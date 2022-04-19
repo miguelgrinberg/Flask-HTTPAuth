@@ -22,7 +22,7 @@ class HTTPAuthTestCase(unittest.TestCase):
         app = Flask(__name__)
         app.config['SECRET_KEY'] = 'my secret'
 
-        digest_auth = HTTPDigestAuth()
+        digest_auth = HTTPDigestAuth(qop=None)
 
         @digest_auth.get_password
         def get_digest_password_2(username):
@@ -51,8 +51,7 @@ class HTTPAuthTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 401)
         self.assertTrue('WWW-Authenticate' in response.headers)
         self.assertTrue(re.match(r'^Digest realm="Authentication Required",'
-                                 r'nonce="[0-9a-f]+",opaque="[0-9a-f]+",'
-                                 r'qop="auth"$',
+                                 r'nonce="[0-9a-f]+",opaque="[0-9a-f]+"$',
                                  response.headers['WWW-Authenticate']))
 
     def test_digest_auth_ignore_options(self):
@@ -71,14 +70,13 @@ class HTTPAuthTestCase(unittest.TestCase):
         ha1 = md5(a1).hexdigest()
         a2 = 'GET:/digest'
         ha2 = md5(a2).hexdigest()
-        a3 = ha1 + ':' + d['nonce'] + ':00000001:foobar:auth:' + ha2
+        a3 = ha1 + ':' + d['nonce'] + ':' + ha2
         auth_response = md5(a3).hexdigest()
 
         response = self.client.get(
             '/digest', headers={
                 'Authorization': 'Digest username="john",realm="{0}",'
-                                 'nonce="{1}",uri="/digest",qop=auth,'
-                                 'nc=00000001,cnonce="foobar",response="{2}",'
+                                 'nonce="{1}",uri="/digest",response="{2}",'
                                  'opaque="{3}"'.format(d['realm'],
                                                        d['nonce'],
                                                        auth_response,
@@ -96,14 +94,13 @@ class HTTPAuthTestCase(unittest.TestCase):
         ha1 = md5(a1).hexdigest()
         a2 = 'GET:/digest'
         ha2 = md5(a2).hexdigest()
-        a3 = ha1 + ':' + d['nonce'] + ':00000001:foobar:auth:' + ha2
+        a3 = ha1 + ':' + d['nonce'] + ':' + ha2
         auth_response = md5(a3).hexdigest()
 
         response = self.client.get(
             '/digest', headers={
                 'Authorization': 'Digest username="john",realm="{0}",'
-                                 'nonce="{1}",uri="/digest",qop=auth,'
-                                 'nc=00000001,cnonce="foobar",response="{2}",'
+                                 'nonce="{1}",uri="/digest",response="{2}",'
                                  'opaque="{3}"'.format(d['realm'],
                                                        d['nonce'],
                                                        auth_response,
@@ -111,8 +108,7 @@ class HTTPAuthTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 401)
         self.assertTrue('WWW-Authenticate' in response.headers)
         self.assertTrue(re.match(r'^Digest realm="Authentication Required",'
-                                 r'nonce="[0-9a-f]+",opaque="[0-9a-f]+",'
-                                 r'qop="auth"$',
+                                 r'nonce="[0-9a-f]+",opaque="[0-9a-f]+"$',
                                  response.headers['WWW-Authenticate']))
 
     def test_digest_auth_login_invalid2(self):
@@ -126,14 +122,13 @@ class HTTPAuthTestCase(unittest.TestCase):
         ha1 = md5(a1).hexdigest()
         a2 = 'GET:/digest'
         ha2 = md5(a2).hexdigest()
-        a3 = ha1 + ':' + d['nonce'] + ':00000001:foobar:auth:' + ha2
+        a3 = ha1 + ':' + d['nonce'] + ':' + ha2
         auth_response = md5(a3).hexdigest()
 
         response = self.client.get(
             '/digest', headers={
-                'Authorization': 'Digest username="john",realm="{0}",'
-                                 'nonce="{1}",uri="/digest",qop=auth,'
-                                 'nc=00000001,cnonce="foobar",response="{2}",'
+                'Authorization': 'Digest username="david",realm="{0}",'
+                                 'nonce="{1}",uri="/digest",response="{2}",'
                                  'opaque="{3}"'.format(d['realm'],
                                                        d['nonce'],
                                                        auth_response,
@@ -141,8 +136,7 @@ class HTTPAuthTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 401)
         self.assertTrue('WWW-Authenticate' in response.headers)
         self.assertTrue(re.match(r'^Digest realm="Authentication Required",'
-                                 r'nonce="[0-9a-f]+",opaque="[0-9a-f]+",'
-                                 r'qop="auth"$',
+                                 r'nonce="[0-9a-f]+",opaque="[0-9a-f]+"$',
                                  response.headers['WWW-Authenticate']))
 
     def test_digest_generate_ha1(self):
@@ -186,14 +180,13 @@ class HTTPAuthTestCase(unittest.TestCase):
         ha1 = md5(a1).hexdigest()
         a2 = 'GET:/digest'
         ha2 = md5(a2).hexdigest()
-        a3 = ha1 + ':' + d['nonce'] + ':00000001:foobar:auth:' + ha2
+        a3 = ha1 + ':' + d['nonce'] + ':' + ha2
         auth_response = md5(a3).hexdigest()
 
         response = self.client.get(
             '/digest', headers={
                 'Authorization': 'Digest username="john",realm="{0}",'
-                                 'nonce="{1}",uri="/digest",qop=auth,'
-                                 'nc=00000001,cnonce="foobar",response="{2}",'
+                                 'nonce="{1}",uri="/digest",response="{2}",'
                                  'opaque="{3}"'.format(d['realm'],
                                                        d['nonce'],
                                                        auth_response,

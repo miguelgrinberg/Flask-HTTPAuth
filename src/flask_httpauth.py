@@ -254,9 +254,13 @@ class HTTPBasicAuth(HTTPAuth):
 
 
 class HTTPDigestAuth(HTTPAuth):
-    def __init__(self, scheme=None, realm=None, use_ha1_pw=False):
+    def __init__(self, scheme=None, realm=None, use_ha1_pw=False, qop='auth'):
         super(HTTPDigestAuth, self).__init__(scheme or 'Digest', realm)
         self.use_ha1_pw = use_ha1_pw
+        if isinstance(qop, str):
+            self.qop = [v.strip() for v in qop.split(',')]
+        else:
+            self.qop = qop
         self.random = SystemRandom()
         try:
             self.random.random()
@@ -326,9 +330,14 @@ class HTTPDigestAuth(HTTPAuth):
     def authenticate_header(self):
         nonce = self.get_nonce()
         opaque = self.get_opaque()
-        return '{0} realm="{1}",nonce="{2}",opaque="{3}"'.format(
-            self.scheme, self.realm, nonce,
-            opaque)
+        if self.qop:
+            return '{0} realm="{1}",nonce="{2}",opaque="{3}",qop="{4}"'.format(
+                self.scheme, self.realm, nonce,
+                opaque, ','.join(self.qop))
+        else:
+            return '{0} realm="{1}",nonce="{2}",opaque="{3}"'.format(
+                self.scheme, self.realm, nonce,
+                opaque)
 
     def authenticate(self, auth, stored_password_or_ha1):
         if not auth or not auth.username or not auth.realm or not auth.uri \
@@ -338,6 +347,8 @@ class HTTPDigestAuth(HTTPAuth):
         if not(self.verify_nonce_callback(auth.nonce)) or \
                 not(self.verify_opaque_callback(auth.opaque)):
             return False
+        if auth.qop and auth.qop not in self.qop:  # pragma: no cover
+            return False
         if self.use_ha1_pw:
             ha1 = stored_password_or_ha1
         else:
@@ -346,7 +357,11 @@ class HTTPDigestAuth(HTTPAuth):
             ha1 = md5(a1.encode('utf-8')).hexdigest()
         a2 = request.method + ":" + auth.uri
         ha2 = md5(a2.encode('utf-8')).hexdigest()
-        a3 = ha1 + ":" + auth.nonce + ":" + ha2
+        if auth.qop == 'auth':
+            a3 = ha1 + ":" + auth.nonce + ":" + auth.nc + ":" + \
+                auth.cnonce + ":auth:" + ha2
+        else:
+            a3 = ha1 + ":" + auth.nonce + ":" + ha2
         response = md5(a3.encode('utf-8')).hexdigest()
         return hmac.compare_digest(response, auth.response)
 

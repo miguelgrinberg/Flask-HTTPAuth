@@ -9,7 +9,7 @@ class HTTPAuthTestCase(unittest.TestCase):
         app = Flask(__name__)
         app.config['SECRET_KEY'] = 'my secret'
 
-        digest_auth_my_realm = HTTPDigestAuth(realm='My Realm')
+        digest_auth_my_realm = HTTPDigestAuth(realm='My Realm', qop=None)
 
         @digest_auth_my_realm.get_password
         def get_digest_password_3(username):
