@@ -72,37 +72,6 @@ The following example uses HTTP Digest authentication::
     if __name__ == '__main__':
         app.run()
 
-Security Concerns with Digest Authentication
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The digest authentication algorithm requires a *challenge* to be sent to the client for use in encrypting the password for transmission. This challenge needs to be used again when the password is decoded at the server, so the challenge information needs to be stored so that it can be recalled later.
-
-By default, Flask-HTTPAuth stores the challenge data in the Flask session. To make the authentication flow secure when using session storage, it is required that server-side sessions are used instead of the default Flask cookie based sessions, as this ensures that the challenge data is not at risk of being captured as it moves in a cookie between server and client. The Flask-Session and Flask-KVSession extensions are both very good options to implement server-side sessions.
-
-As an alternative to using server-side sessions, an application can implement its own generation and storage of challenge data. To do this, there are four callback functions that the application needs to implement::
-
-    @auth.generate_nonce
-    def generate_nonce():
-        """Return the nonce value to use for this client."""
-        pass
-
-    @auth.generate_opaque
-    def generate_opaque():
-        """Return the opaque value to use for this client."""
-        pass
-
-    @auth.verify_nonce
-    def verify_nonce(nonce):
-        """Verify that the nonce value sent by the client is correct."""
-        pass
-
-    @auth.verify_opaque
-    def verify_opaque(opaque):
-        """Verify that the opaque value sent by the client is correct."""
-        pass
-
-For information of what the ``nonce`` and ``opaque`` values are and how they are used in digest authentication, consult `RFC 2617 <http://tools.ietf.org/html/rfc2617#section-3.2.1>`_.
-
 Token Authentication Example
 ----------------------------
 
@@ -326,9 +295,9 @@ API Documentation
 
 .. class:: HTTPDigestAuth
 
-  This class handles HTTP Digest authentication for Flask routes. The ``SECRET_KEY`` configuration must be set in the Flask application to enable the session to work. Flask by default stores user sessions in the client as secure cookies, so the client must be able to handle cookies. To make this authentication method secure, a `session interface <http://flask.pocoo.org/docs/api/#flask.Flask.session_interface>`_ that writes sessions in the server must be used.
+  This class handles HTTP Digest authentication for Flask routes. The ``SECRET_KEY`` configuration must be set in the Flask application to enable the session to work. Flask by default stores user sessions in the client as secure cookies, so the client must be able to handle cookies. 
 
-  .. method:: __init__(self, scheme=None, realm=None, use_ha1_pw=False)
+  .. method:: __init__(self, scheme=None, realm=None, use_ha1_pw=False, qop='auth', algorithm='MD5')
 
     Create a digest authentication object.
 
@@ -337,6 +306,10 @@ API Documentation
     The ``realm`` argument can be used to provide an application defined realm with the ``WWW-Authenticate`` header.
 
     If ``use_ha1_pw`` is False, then the ``get_password`` callback needs to return the plain text password for the given user. If ``use_ha1_pw`` is True, the ``get_password`` callback needs to return the HA1 value for the given user. The advantage of setting ``use_ha1_pw`` to ``True`` is that it allows the application to store the HA1 hash of the password in the user database.
+
+    The ``qop`` option configures a list of accepted quality of protection extensions. This argument can be given as a comma-separated string, a list of strings, or ``None`` to disable. The default is ``auth``. The ``auth-int`` option is currently not implemented.
+
+    The ``algorithm`` option configures the hash generation algorithm to use. The default is ``MD5``. The two algorithms that are implemented are ``MD5`` and ``MD5-Sess``.
 
   .. method:: generate_ha1(username, password)
 
