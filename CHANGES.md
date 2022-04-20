@@ -1,5 +1,11 @@
 # Flask-HTTPAuth change log
 
+**Release 4.6.0** - 2022-04-21
+
+- Add MD5-Sess algorithm for Digest auth ([commit](https://github.com/miguelgrinberg/flask-httpauth/commit/8a5d1eb87c9b3cb71cc6c5839a4a3411ede1f505))
+- Add qop=auth option for Digest auth ([commit](https://github.com/miguelgrinberg/flask-httpauth/commit/d311fe5e996d43316989daf8a67ded22a6a567e2)) (thanks **Edward**!)
+- Add Python 3.10 and PyPy 3.8 to build ([commit](https://github.com/miguelgrinberg/flask-httpauth/commit/ffeab170a8230e4defb117f242937865072c8094))
+
 **Release 4.5.0** - 2021-10-25
 
 - Support for Flask 2 async views ([commit](https://github.com/miguelgrinberg/flask-httpauth/commit/dc6de2dc9e1203e42d2763a0914e16ce96b74035))
