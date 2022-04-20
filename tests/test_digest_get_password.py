@@ -1,5 +1,6 @@
 import unittest
 import re
+import pytest
 from hashlib import md5 as basic_md5
 from flask import Flask
 from flask_httpauth import HTTPDigestAuth
@@ -46,13 +47,32 @@ class HTTPAuthTestCase(unittest.TestCase):
         self.digest_auth = digest_auth
         self.client = app.test_client()
 
+    def test_constructor(self):
+        d = HTTPDigestAuth()
+        assert d.qop == ['auth']
+        assert d.algorithm == 'MD5'
+        d = HTTPDigestAuth(qop=None)
+        assert d.qop is None
+        d = HTTPDigestAuth(qop='auth')
+        assert d.qop == ['auth']
+        d = HTTPDigestAuth(qop=['foo', 'bar'])
+        assert d.qop == ['foo', 'bar']
+        d = HTTPDigestAuth(qop='foo,bar, baz')
+        assert d.qop == ['foo', 'bar', 'baz']
+        d = HTTPDigestAuth(algorithm='md5')
+        assert d.algorithm == 'MD5'
+        d = HTTPDigestAuth(algorithm='md5-sess')
+        assert d.algorithm == 'MD5-Sess'
+        with pytest.raises(ValueError):
+            HTTPDigestAuth(algorithm='foo')
+
     def test_digest_auth_prompt(self):
         response = self.client.get('/digest')
         self.assertEqual(response.status_code, 401)
         self.assertTrue('WWW-Authenticate' in response.headers)
         self.assertTrue(re.match(r'^Digest realm="Authentication Required",'
                                  r'nonce="[0-9a-f]+",opaque="[0-9a-f]+",'
-                                 r'qop="auth"$',
+                                 r'algorithm="MD5",qop="auth"$',
                                  response.headers['WWW-Authenticate']))
 
     def test_digest_auth_ignore_options(self):
@@ -69,6 +89,34 @@ class HTTPAuthTestCase(unittest.TestCase):
 
         a1 = 'john:' + d['realm'] + ':bye'
         ha1 = md5(a1).hexdigest()
+        a2 = 'GET:/digest'
+        ha2 = md5(a2).hexdigest()
+        a3 = ha1 + ':' + d['nonce'] + ':00000001:foobar:auth:' + ha2
+        auth_response = md5(a3).hexdigest()
+
+        response = self.client.get(
+            '/digest', headers={
+                'Authorization': 'Digest username="john",realm="{0}",'
+                                 'nonce="{1}",uri="/digest",qop=auth,'
+                                 'nc=00000001,cnonce="foobar",response="{2}",'
+                                 'opaque="{3}"'.format(d['realm'],
+                                                       d['nonce'],
+                                                       auth_response,
+                                                       d['opaque'])})
+        self.assertEqual(response.data, b'digest_auth:john')
+
+    def test_digest_auth_md5_sess_login_valid(self):
+        self.digest_auth.algorithm = 'MD5-Sess'
+
+        response = self.client.get('/digest')
+        self.assertTrue(response.status_code == 401)
+        header = response.headers.get('WWW-Authenticate')
+        auth_type, auth_info = header.split(None, 1)
+        d = parse_dict_header(auth_info)
+
+        a1 = 'john:' + d['realm'] + ':bye'
+        ha1 = md5(
+            md5(a1).hexdigest() + ':' + d['nonce'] + ':foobar').hexdigest()
         a2 = 'GET:/digest'
         ha2 = md5(a2).hexdigest()
         a3 = ha1 + ':' + d['nonce'] + ':00000001:foobar:auth:' + ha2
@@ -112,7 +160,7 @@ class HTTPAuthTestCase(unittest.TestCase):
         self.assertTrue('WWW-Authenticate' in response.headers)
         self.assertTrue(re.match(r'^Digest realm="Authentication Required",'
                                  r'nonce="[0-9a-f]+",opaque="[0-9a-f]+",'
-                                 r'qop="auth"$',
+                                 r'algorithm="MD5",qop="auth"$',
                                  response.headers['WWW-Authenticate']))
 
     def test_digest_auth_login_invalid2(self):
@@ -142,7 +190,7 @@ class HTTPAuthTestCase(unittest.TestCase):
         self.assertTrue('WWW-Authenticate' in response.headers)
         self.assertTrue(re.match(r'^Digest realm="Authentication Required",'
                                  r'nonce="[0-9a-f]+",opaque="[0-9a-f]+",'
-                                 r'qop="auth"$',
+                                 r'algorithm="MD5",qop="auth"$',
                                  response.headers['WWW-Authenticate']))
 
     def test_digest_generate_ha1(self):

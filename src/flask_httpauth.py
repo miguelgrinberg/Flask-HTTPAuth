@@ -254,13 +254,20 @@ class HTTPBasicAuth(HTTPAuth):
 
 
 class HTTPDigestAuth(HTTPAuth):
-    def __init__(self, scheme=None, realm=None, use_ha1_pw=False, qop='auth'):
+    def __init__(self, scheme=None, realm=None, use_ha1_pw=False, qop='auth',
+                 algorithm='MD5'):
         super(HTTPDigestAuth, self).__init__(scheme or 'Digest', realm)
         self.use_ha1_pw = use_ha1_pw
         if isinstance(qop, str):
             self.qop = [v.strip() for v in qop.split(',')]
         else:
             self.qop = qop
+        if algorithm.lower() == 'md5':
+            self.algorithm = 'MD5'
+        elif algorithm.lower() == 'md5-sess':
+            self.algorithm = 'MD5-Sess'
+        else:
+            raise ValueError(f'Algorithm {algorithm} is not supported')
         self.random = SystemRandom()
         try:
             self.random.random()
@@ -331,9 +338,10 @@ class HTTPDigestAuth(HTTPAuth):
         nonce = self.get_nonce()
         opaque = self.get_opaque()
         if self.qop:
-            return '{0} realm="{1}",nonce="{2}",opaque="{3}",qop="{4}"'.format(
+            return ('{0} realm="{1}",nonce="{2}",opaque="{3}",algorithm="{4}"'
+                    ',qop="{5}"').format(
                 self.scheme, self.realm, nonce,
-                opaque, ','.join(self.qop))
+                opaque, self.algorithm, ','.join(self.qop))
         else:
             return '{0} realm="{1}",nonce="{2}",opaque="{3}"'.format(
                 self.scheme, self.realm, nonce,
@@ -355,6 +363,9 @@ class HTTPDigestAuth(HTTPAuth):
             a1 = auth.username + ":" + auth.realm + ":" + \
                 stored_password_or_ha1
             ha1 = md5(a1.encode('utf-8')).hexdigest()
+        if self.algorithm == 'MD5-Sess':
+            ha1 = md5((ha1 + ':' + auth.nonce + ':' + auth.cnonce).encode(
+                'utf-8')).hexdigest()
         a2 = request.method + ":" + auth.uri
         ha2 = md5(a2.encode('utf-8')).hexdigest()
         if auth.qop == 'auth':
