@@ -21,6 +21,8 @@ class HTTPAuthTestCase(unittest.TestCase):
                     return password == 'hello'
                 elif username == 'susan':
                     return password == 'bye'
+                elif username == 'garçon':
+                    return password == 'áéíóú'
                 elif username == '':
                     g.anon = True
                     return True
@@ -31,6 +33,8 @@ class HTTPAuthTestCase(unittest.TestCase):
                     return 'john'
                 elif username == 'susan' and password == 'bye':
                     return 'susan'
+                elif username == 'garçon' and password == 'áéíóú':
+                    return 'garçon'
                 elif username == '':
                     g.anon = True
                     return ''
@@ -59,17 +63,24 @@ class HTTPAuthTestCase(unittest.TestCase):
         self.client = app.test_client()
 
     def test_verify_auth_login_valid(self):
-        creds = base64.b64encode(b'susan:bye').decode('utf-8')
+        creds = base64.b64encode(b'susan:bye').decode()
         response = self.client.get(
             '/basic-verify', headers={'Authorization': 'Basic ' + creds})
         self.assertEqual(response.data, b'basic_verify_auth:susan anon:False')
+
+    def test_verify_auth_login_valid_latin1(self):
+        creds = base64.b64encode('garçon:áéíóú'.encode('latin1')).decode()
+        response = self.client.get(
+            '/basic-verify', headers={'Authorization': 'Basic ' + creds})
+        self.assertEqual(response.data.decode(),
+                         'basic_verify_auth:garçon anon:False')
 
     def test_verify_auth_login_empty(self):
         response = self.client.get('/basic-verify')
         self.assertEqual(response.data, b'basic_verify_auth: anon:True')
 
     def test_verify_auth_login_invalid(self):
-        creds = base64.b64encode(b'john:bye').decode('utf-8')
+        creds = base64.b64encode(b'john:bye').decode()
         response = self.client.get(
             '/basic-verify', headers={'Authorization': 'Basic ' + creds})
         self.assertEqual(response.status_code, 403)

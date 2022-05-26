@@ -217,15 +217,18 @@ class HTTPBasicAuth(HTTPAuth):
         value = request.headers[header].encode('utf-8')
         try:
             scheme, credentials = value.split(b' ', 1)
-            username, password = b64decode(credentials).split(b':', 1)
+            encoded_username, encoded_password = b64decode(
+                credentials).split(b':', 1)
         except (ValueError, TypeError):
             return None
         try:
-            username = username.decode('utf-8')
-            password = password.decode('utf-8')
+            username = encoded_username.decode('utf-8')
+            password = encoded_password.decode('utf-8')
         except UnicodeDecodeError:
-            username = None
-            password = None
+            # try to decode again with latin-1, which should always work
+            username = encoded_username.decode('latin1')
+            password = encoded_password.decode('latin1')
+
         return Authorization(
             scheme, {'username': username, 'password': password})
 
