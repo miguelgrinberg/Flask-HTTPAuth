@@ -1,5 +1,10 @@
 # Flask-HTTPAuth change log
 
+**Release 4.7.0** - 2022-05-29
+
+- Fallback to latin-1 encoding for credentials when utf-8 fails [#151](https://github.com/miguelgrinberg/flask-httpauth/issues/151) ([commit](https://github.com/miguelgrinberg/flask-httpauth/commit/4a92b75b79ea8e29ed76910792208d0a0a9e897a))
+- Documentation updates ([commit](https://github.com/miguelgrinberg/flask-httpauth/commit/b42168ed174cde0a9404dbf0b05b5b5c5d6eb46d))
+
 **Release 4.6.0** - 2022-04-21
 
 - Add MD5-Sess algorithm for Digest auth ([commit](https://github.com/miguelgrinberg/flask-httpauth/commit/8a5d1eb87c9b3cb71cc6c5839a4a3411ede1f505))
