@@ -213,7 +213,7 @@ API Documentation
 
   .. method:: get_user_roles(roles_callback)
 
-    If defined, this callback function will be called by the framework to obtain the roles assigned to a given user. The callback function takes a single argument, the user for which roles are requested. The user object passed to this function will be the one returned by the ``verify_callback`` function. If ``verify_callback`` function return ``True`` then ``auth`` object will be passed as an argument instead. The function should return the role or list of roles that belong to the user. Example::
+    If defined, this callback function will be called by the framework to obtain the roles assigned to a given user. The callback function takes a single argument, the user for which roles are requested. The user object passed to this function will be the one returned by the "verify" callback. If the verify callback returned ``True`` instead of a user object, then the ``Authorization`` object provided by Flask will be passed to this function. The function should return the role or list of roles that belong to the user. Example::
 
       @auth.get_user_roles
       def get_user_roles(user):
