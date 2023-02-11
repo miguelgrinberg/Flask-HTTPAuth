@@ -355,8 +355,8 @@ class HTTPDigestAuth(HTTPAuth):
                 or not auth.nonce or not auth.response \
                 or not stored_password_or_ha1:
             return False
-        if not(self.verify_nonce_callback(auth.nonce)) or \
-                not(self.verify_opaque_callback(auth.opaque)):
+        if not self.verify_nonce_callback(auth.nonce) or \
+                not self.verify_opaque_callback(auth.opaque):
             return False
         if auth.qop and auth.qop not in self.qop:  # pragma: no cover
             return False
