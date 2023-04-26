@@ -33,7 +33,7 @@ class HTTPAuthTestCase(unittest.TestCase):
 
         @token_auth.get_user_roles
         async def get_token_role(auth):
-            if auth['token'] == 'this-is-the-token!':
+            if auth.token == 'this-is-the-token!':
                 return 'foo'
             return
 
@@ -47,7 +47,7 @@ class HTTPAuthTestCase(unittest.TestCase):
 
         @custom_token_auth.get_user_roles
         async def get_custom_token_role(auth):
-            if auth['token'] == 'this-is-the-custom-token!':
+            if auth.token == 'this-is-the-custom-token!':
                 return 'foo'
             return
 
