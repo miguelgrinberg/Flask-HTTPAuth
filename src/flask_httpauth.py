@@ -83,14 +83,24 @@ class HTTPAuth(object):
                 try:
                     auth_type, token = request.headers['Authorization'].split(
                         None, 1)
-                    auth = Authorization(auth_type, token=token)
+                    try:
+                        auth = Authorization(auth_type, token=token)
+                    except TypeError:
+                        # backwards compatibility for older Werkzeug
+                        auth = Authorization(auth_type)
+                        auth.token = token
                 except (ValueError, KeyError):
                     # The Authorization header is either empty or has no token
                     pass
         elif self.header in request.headers:
             # using a custom header, so the entire value of the header is
             # assumed to be a token
-            auth = Authorization(self.scheme, token=request.headers[self.header])
+            try:
+                auth = Authorization(self.scheme, token=request.headers[self.header])
+            except TypeError:
+                # backwards compatibility for older Werkzeug
+                auth = Authorization(self.scheme)
+                auth.token = request.headers[self.header]
 
         # if the auth type does not match, we act as if there is no auth
         # this is better than failing directly, as it allows the callback
