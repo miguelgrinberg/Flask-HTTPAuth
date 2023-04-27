@@ -76,22 +76,24 @@ class HTTPAuth(object):
         auth = None
         if self.header is None or self.header == 'Authorization':
             auth = request.authorization
-            if auth is None and 'Authorization' in request.headers:
-                # Flask/Werkzeug do not recognize any authentication types
-                # other than Basic or Digest, so here we parse the header by
-                # hand
+            if auth is None and \
+                    'Authorization' in request.headers:  # pragma: no cover
+                # Flask/Werkzeug versions before 2.3 do not recognize any
+                # authentication types other than Basic or Digest, so here we
+                # parse the header by hand
                 try:
                     auth_type, token = request.headers['Authorization'].split(
                         None, 1)
-                    auth = Authorization(auth_type, {'token': token})
+                    auth = Authorization(auth_type)
+                    auth.token = token
                 except (ValueError, KeyError):
                     # The Authorization header is either empty or has no token
                     pass
         elif self.header in request.headers:
             # using a custom header, so the entire value of the header is
             # assumed to be a token
-            auth = Authorization(self.scheme,
-                                 {'token': request.headers[self.header]})
+            auth = Authorization(self.scheme)
+            auth.token = request.headers[self.header]
 
         # if the auth type does not match, we act as if there is no auth
         # this is better than failing directly, as it allows the callback
@@ -391,10 +393,7 @@ class HTTPTokenAuth(HTTPAuth):
         return f
 
     def authenticate(self, auth, stored_password):
-        if auth:
-            token = auth['token']
-        else:
-            token = ""
+        token = getattr(auth, 'token', '')
         if self.verify_token_callback:
             return self.ensure_sync(self.verify_token_callback)(token)
 
