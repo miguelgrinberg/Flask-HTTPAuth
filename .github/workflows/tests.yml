@@ -23,7 +23,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python: ['3.8', '3.9', '3.10', '3.11', 'pypy-3.8']
-        flask: ['flask<2.3', 'flask>=2.3']
+        flask: ['flask<2.3 werkzeug<2.3', 'flask>=2.3 werkzeug>=2.3']
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
