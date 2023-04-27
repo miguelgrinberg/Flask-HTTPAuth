@@ -1,5 +1,12 @@
 # Flask-HTTPAuth change log
 
+**Release 4.8.0** - 2023-04-27
+
+- Changes to handle breaking changes in Flask/Werkzeug 2.3 [#160](https://github.com/miguelgrinberg/flask-httpauth/issues/160) ([commit](https://github.com/miguelgrinberg/flask-httpauth/commit/76548398847fcedc8421a8f4b4c2d12ee16270fe))
+- Remove Python 3.6 and 3.7 from builds, add Python 3.11 ([commit](https://github.com/miguelgrinberg/flask-httpauth/commit/04399bd2e121f8f0bff34360af74978920ba9096))
+- Replace itsdangerous with pyjwt in examples [#157](https://github.com/miguelgrinberg/flask-httpauth/issues/157) ([commit](https://github.com/miguelgrinberg/flask-httpauth/commit/6f708b09f4d54e48ef1a3501c63867ffb1789077))
+- Better documentation for the `get_user_roles` callback argument [#152](https://github.com/miguelgrinberg/flask-httpauth/issues/152) ([commit](https://github.com/miguelgrinberg/flask-httpauth/commit/03ff9443114ac57cae34dcf0aae39e89985529b0)) (thanks **Taranjeet Singh**!)
+
 **Release 4.7.0** - 2022-05-29
 
 - Fallback to latin-1 encoding for credentials when utf-8 fails [#151](https://github.com/miguelgrinberg/flask-httpauth/issues/151) ([commit](https://github.com/miguelgrinberg/flask-httpauth/commit/4a92b75b79ea8e29ed76910792208d0a0a9e897a))
