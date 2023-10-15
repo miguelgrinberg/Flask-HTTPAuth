@@ -1,6 +1,47 @@
+[project]
+name = "Flask-HTTPAuth"
+version = "4.8.1.dev0"
+authors = [
+    { name = "Miguel Grinberg", email = "miguel.grinberg@gmail.com" },
+]
+description = "HTTP authentication for Flask routes"
+classifiers = [
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: Implementation :: MicroPython",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "flask",
+]
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[project.urls]
+Homepage = "https://github.com/miguelgrinberg/flask-httpauth"
+"Bug Tracker" = "https://github.com/miguelgrinberg/flask-httpauth/issues"
+
+[project.optional-dependencies]
+docs = [
+    "sphinx",
+]
+
+[tool.setuptools]
+zip-safe = false
+include-package-data = true
+py-modules = [
+    "flask_httpauth",
+]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
 [build-system]
 requires = [
-    "setuptools>=42",
-    "wheel"
+    "setuptools>=61.2",
 ]
 build-backend = "setuptools.build_meta"
