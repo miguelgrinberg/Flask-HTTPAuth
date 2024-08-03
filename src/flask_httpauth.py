@@ -197,7 +197,11 @@ class HTTPAuth(object):
 
 class HTTPCookieAuth(HTTPAuth):
     def __init__(self, scheme=None, realm=None, cookie_name=None):
-        super(HTTPCookieAuth, self).__init__(scheme or 'Bearer', realm, cookie_name)
+        super(HTTPCookieAuth, self).__init__(
+            scheme or 'Bearer',
+            realm,
+            cookie_name
+        )
 
         self.verify_cookie_callback = None
         self.cookie_name = cookie_name
@@ -216,7 +220,8 @@ class HTTPCookieAuth(HTTPAuth):
         cookie_val = request.cookies.get(expected_cookie_name, '')
         token = ''
         if self.scheme != 'ApiKey':
-            # if scheme is Bearer or anything else besides ApiKey, split on scheme name
+            # if scheme is Bearer or anything else besides ApiKey,
+            # split on scheme name
             if isinstance(cookie_val, str) and len(cookie_val) > 0:
                 try:
                     scheme, token = cookie_val.split(' ')
@@ -231,12 +236,6 @@ class HTTPCookieAuth(HTTPAuth):
             token = cookie_val
         auth = Authorization(self.scheme, token=token)
         return auth
-
-    def get_auth_password(self, auth):
-        try:
-            return getattr(auth, 'token', '')
-        except KeyError:
-            return ""
 
 
 class HTTPBasicAuth(HTTPAuth):

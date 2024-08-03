@@ -65,7 +65,7 @@ class HTTPAuthTestCase(unittest.TestCase):
         self.app = app
         self.cookie_auth = cookie_auth
         self.client = app.test_client()
-    
+
     def tearDown(self) -> None:
         self.client._cookies.clear()
 
@@ -96,7 +96,8 @@ class HTTPAuthTestCase(unittest.TestCase):
         self.assertEqual(response.data.decode('utf-8'), 'cookie_auth:None')
 
     def test_cookie_auth_login_invalid_token(self):
-        self.client.set_cookie("Authorization", "MyToken this-is-not-the-token!")
+        self.client.set_cookie("Authorization",
+                               "MyToken this-is-not-the-token!")
         response = self.client.get('/protected')
         self.assertEqual(response.status_code, 401)
         self.assertTrue('WWW-Authenticate' in response.headers)
@@ -151,7 +152,7 @@ class HTTPAuthTestCase(unittest.TestCase):
         self.client.set_cookie("X-API-Key", "this-is-the-token!")
         basic_creds = base64.b64encode(b'susan:bye').decode('utf-8')
         response = self.client.get(
-            '/protected3', headers={'Authorization': 'Basic ' + basic_creds,})
+            '/protected3', headers={'Authorization': 'Basic ' + basic_creds})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data.decode('utf-8'), 'cookie_auth3:user')
 
