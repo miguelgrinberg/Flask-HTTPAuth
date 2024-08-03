@@ -195,6 +195,50 @@ class HTTPAuth(object):
             return f
 
 
+class HTTPCookieAuth(HTTPAuth):
+    def __init__(self, scheme=None, realm=None, cookie_name=None):
+        super(HTTPCookieAuth, self).__init__(scheme or 'Bearer', realm, cookie_name)
+
+        self.verify_cookie_callback = None
+        self.cookie_name = cookie_name
+
+    def verify_cookie(self, f):
+        self.verify_cookie_callback = f
+        return f
+
+    def authenticate(self, auth, _):
+        cookie = getattr(auth, 'token', '')
+        if self.verify_cookie_callback:
+            return self.ensure_sync(self.verify_cookie_callback)(cookie)
+
+    def get_auth(self):
+        expected_cookie_name = self.cookie_name or 'Authorization'
+        cookie_val = request.cookies.get(expected_cookie_name, '')
+        token = ''
+        if self.scheme != 'ApiKey':
+            # if scheme is Bearer or anything else besides ApiKey, split on scheme name
+            if isinstance(cookie_val, str) and len(cookie_val) > 0:
+                try:
+                    scheme, token = cookie_val.split(' ')
+                except ValueError:
+                    # not enough values to unpack
+                    return None
+                # ensure scheme names match (case insensitive)
+                if scheme.lower() != (self.scheme or "Bearer").lower():
+                    return None
+        else:
+            # for ApiKey scheme, use whole cookie value
+            token = cookie_val
+        auth = Authorization(self.scheme, token=token)
+        return auth
+
+    def get_auth_password(self, auth):
+        try:
+            return getattr(auth, 'token', '')
+        except KeyError:
+            return ""
+
+
 class HTTPBasicAuth(HTTPAuth):
     def __init__(self, scheme=None, realm=None):
         super(HTTPBasicAuth, self).__init__(scheme or 'Basic', realm)
