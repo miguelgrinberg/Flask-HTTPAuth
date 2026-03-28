@@ -1,6 +1,6 @@
 [project]
 name = "Flask-HTTPAuth"
-version = "4.8.1"
+version = "4.8.2.dev0"
 authors = [
     { name = "Miguel Grinberg", email = "miguel.grinberg@gmail.com" },
 ]
