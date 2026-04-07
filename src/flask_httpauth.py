@@ -419,6 +419,12 @@ class HTTPDigestAuth(HTTPAuth):
     The ``algorithm`` option configures the hash generation algorithm to use.
     The default is ``MD5``. The two algorithms that are implemented are ``MD5``
     and ``MD5-Sess``.
+
+    Note: By default, the ``nonce`` and ``opaque`` values that are assigned to
+    each client are stored in the Flask session. To keep these values secured,
+    server-side sessions such as those provided by the Flask-Session and
+    Flask-KVSession extensions should be used. With the default cookie-based
+    sessions provided by Flask, there is risk that these values can be leaked.
     """
     def __init__(self, scheme=None, realm=None, use_ha1_pw=False, qop='auth',
                  algorithm='MD5'):
