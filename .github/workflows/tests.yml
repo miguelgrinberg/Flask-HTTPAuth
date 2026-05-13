@@ -41,7 +41,7 @@ jobs:
           python-version: ${{ matrix.python }}
       - run: python -m pip install --upgrade pip wheel
       - run: pip install tox
-      - run: tox
+      - run: tox -epy
   coverage:
     name: coverage
     runs-on: ubuntu-latest
