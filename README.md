@@ -1,7 +1,7 @@
 Flask-HTTPAuth
 ==============
 
-[![Build status](https://github.com/miguelgrinberg/Flask-HTTPAuth/workflows/build/badge.svg)](https://github.com/miguelgrinberg/Flask-HTTPAuth/actions) [![codecov](https://codecov.io/gh/miguelgrinberg/Flask-HTTPAuth/branch/master/graph/badge.svg?token=KeU2002DHo)](https://codecov.io/gh/miguelgrinberg/Flask-HTTPAuth)
+[![tests](https://code.miguelgrinberg.com/miguelgrinberg/flask-httpauth/badges/workflows/tests.yml/badge.svg)](https://code.miguelgrinberg.com/miguelgrinberg/flask-httpauth/actions)
 
 Simple extension that provides Basic, Digest and Token HTTP authentication for Flask routes.
 
@@ -79,6 +79,22 @@ if __name__ == '__main__':
 Resources
 ---------
 
-- [Documentation](http://flask-httpauth.readthedocs.io/en/latest/)
-- [PyPI](https://pypi.org/project/Flask-HTTPAuth)
-- [Change log](https://github.com/miguelgrinberg/Flask-HTTPAuth/blob/main/CHANGES.md)
+- [git](https://code.miguelgrinberg.com/miguelgrinberg/flask-httpauth)
+- [Change Log](https://code.miguelgrinberg.com/miguelgrinberg/flask-httpauth/src/branch/main/CHANGES.md)
+- [Documentation](https://flask-httpauth.readthedocs.io/)
+- [PyPI](https://pypi.python.org/pypi/flask-httpauth)
+- [Contributor's guide](CONTRIBUTING.md)
+- [Security policy](SECURITY.md)
+
+Sponsor this project
+--------------------
+
+This project relies on contributions from its users. If you benefit from it please consider making a single or ongoing monetary contribution in one of the following platforms:
+
+- [Github Sponsors](https://github.com/sponsors/miguelgrinberg)
+- [Patreon](https://patreon.com/miguelgrinberg)
+- [Buy me a Coffee](https://buymeacoffee.com/miguelgrinberg)
+- [thanks.dev](https://thanks.dev/u/gh/miguelgrinberg)
+- [PayPal](https://paypal.me/miguelgrinberg)
+
+Thank you!
